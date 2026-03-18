@@ -1,0 +1,125 @@
+// ── Enums as union types ──
+export type ObjectiveLevel = "company" | "team" | "individual";
+export type ObjectiveStatus = "draft" | "active" | "completed" | "cancelled";
+export type Confidence = "on_track" | "at_risk" | "off_track";
+export type MetricType = "number" | "percentage" | "currency" | "boolean";
+export type UserRole = "admin" | "manager" | "member";
+
+// ── Core models ──
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+  role: UserRole;
+  teamId: string | null;
+  createdAt: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description: string;
+  parentTeamId: string | null;
+  createdAt: string;
+  members?: User[];
+  childTeams?: Team[];
+}
+
+export interface Period {
+  id: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Objective {
+  id: string;
+  title: string;
+  description: string;
+  level: ObjectiveLevel;
+  ownerId: string;
+  teamId: string | null;
+  periodId: string;
+  parentObjectiveId: string | null;
+  status: ObjectiveStatus;
+  progress: number;
+  confidence: Confidence;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  owner?: User;
+  team?: Team;
+  period?: Period;
+  keyResults?: KeyResult[];
+  parentObjective?: Objective;
+  childObjectives?: Objective[];
+}
+
+export interface KeyResult {
+  id: string;
+  objectiveId: string;
+  title: string;
+  description: string;
+  metricType: MetricType;
+  startValue: number;
+  currentValue: number;
+  targetValue: number;
+  unit: string;
+  progress: number;
+  confidence: Confidence;
+  ownerId: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  owner?: User;
+  objective?: Objective;
+  checkIns?: CheckIn[];
+}
+
+export interface CheckIn {
+  id: string;
+  keyResultId: string;
+  authorId: string;
+  previousValue: number;
+  newValue: number;
+  confidence: Confidence;
+  note: string;
+  createdAt: string;
+  author?: User;
+}
+
+// ── UI types ──
+export interface ObjectiveFilters {
+  level: ObjectiveLevel | "all";
+  status: ObjectiveStatus | "all";
+  confidence: Confidence | "all";
+  teamId: string | "all";
+  periodId: string;
+  search: string;
+}
+
+export interface AlignmentNode {
+  objective: Objective;
+  children: AlignmentNode[];
+  depth: number;
+}
+
+export interface DashboardStats {
+  totalObjectives: number;
+  totalKeyResults: number;
+  avgProgress: number;
+  onTrackCount: number;
+  atRiskCount: number;
+  offTrackCount: number;
+  recentCheckIns: CheckIn[];
+}
+
+export interface Toast {
+  id: string;
+  type: "success" | "error" | "info" | "warning";
+  message: string;
+  duration?: number;
+}
