@@ -8,15 +8,17 @@ export function useAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function fetchProfile(authUserId: string) {
-    const { data } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", authUserId)
-      .single();
+  async function fetchProfile(authUserId: string): Promise<AppUser | null> {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authUserId)
+        .single();
 
-    if (data) {
-      setUser({
+      if (error || !data) return null;
+
+      return {
         id: data.id,
         fullName: data.full_name,
         email: data.email,
@@ -24,31 +26,49 @@ export function useAuth() {
         role: data.role,
         teamId: data.team_id,
         createdAt: data.created_at,
-      });
+      };
+    } catch {
+      return null;
     }
   }
 
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+    async function init() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          if (mounted && profile) {
+            setUser(profile);
+          }
+        }
+      } catch (err) {
+        console.error("Auth init error:", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      if (mounted) setLoading(false);
-    });
+    }
+
+    init();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      if (event === "SIGNED_OUT") {
+
+      if (event === "SIGNED_OUT" || !session) {
         setUser(null);
-      } else if (event === "SIGNED_IN" && session?.user) {
-        await fetchProfile(session.user.id);
+      } else if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        if (mounted) {
+          setUser(profile);
+        }
       }
     });
 

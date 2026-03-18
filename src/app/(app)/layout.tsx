@@ -35,40 +35,31 @@ export default function AppLayout({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, loading } = useAuth();
-  const [redirecting, setRedirecting] = useState(false);
 
   // Redirect to login if not authenticated (after loading is done)
   useEffect(() => {
-    if (!loading && !user && !redirecting) {
-      setRedirecting(true);
-      router.replace("/login");
+    if (!loading && !user) {
+      window.location.href = "/login";
     }
-  }, [loading, user, redirecting, router]);
+  }, [loading, user]);
 
   async function handleSignOut() {
     await signOut();
-    router.replace("/login");
+    window.location.href = "/login";
   }
 
-  // Loading state
-  if (loading) {
+  // Loading or redirecting state
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center">
             <Activity className="w-6 h-6 text-white animate-pulse" />
           </div>
-          <span className="text-sm text-gray-500">Chargement...</span>
+          <span className="text-sm text-gray-500">
+            {loading ? "Chargement..." : "Redirection..."}
+          </span>
         </div>
-      </div>
-    );
-  }
-
-  // Redirecting to login
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <span className="text-sm text-gray-500">Redirection...</span>
       </div>
     );
   }
