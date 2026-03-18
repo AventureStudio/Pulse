@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import type { Period, Team, Objective } from "@/types";
 import ObjectiveForm, { type ObjectiveFormData } from "@/components/objectives/ObjectiveForm";
+import { useI18n } from "@/lib/i18n";
 
 export default function NewObjectivePage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -67,9 +69,9 @@ export default function NewObjectivePage() {
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Nouvel objectif</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("objectives.new.title")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          D&eacute;finissez un nouvel objectif pour votre organisation
+          {t("objectives.new.subtitle")}
         </p>
       </div>
 

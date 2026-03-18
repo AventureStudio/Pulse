@@ -5,8 +5,10 @@ import { Users, Plus, Loader2 } from "lucide-react";
 import type { Team } from "@/types";
 import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
+import { useI18n } from "@/lib/i18n";
 
 export default function TeamsPage() {
+  const { t } = useI18n();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,13 +65,13 @@ export default function TeamsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">&Eacute;quipes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("teams.title")}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            G&eacute;rez vos &eacute;quipes et leurs OKRs
+            {t("teams.subtitle")}
           </p>
         </div>
         <button className="btn-primary btn-md" onClick={() => setModalOpen(true)}>
-          <Plus className="w-4 h-4" /> Nouvelle &eacute;quipe
+          <Plus className="w-4 h-4" /> {t("teams.new")}
         </button>
       </div>
 
@@ -87,8 +89,8 @@ export default function TeamsPage() {
       ) : teams.length === 0 ? (
         <EmptyState
           icon={<Users className="w-7 h-7" />}
-          title="Aucune \u00E9quipe cr\u00E9\u00E9e"
-          description="Cr\u00E9ez des \u00E9quipes pour organiser vos objectifs par d\u00E9partement."
+          title={t("teams.emptyTitle")}
+          description={t("teams.emptyDesc")}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -110,8 +112,7 @@ export default function TeamsPage() {
                   <div className="flex items-center gap-2 mt-3 text-xs text-gray-400">
                     <Users className="w-3.5 h-3.5" />
                     <span>
-                      {team.members ? team.members.length : 0} membre
-                      {(team.members?.length ?? 0) !== 1 ? "s" : ""}
+                      {team.members ? team.members.length : 0} {t("teams.members")}
                     </span>
                   </div>
                 </div>
@@ -129,18 +130,18 @@ export default function TeamsPage() {
           setFormName("");
           setFormDescription("");
         }}
-        title="Nouvelle \u00E9quipe"
+        title={t("teams.new")}
         size="sm"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom de l&apos;&eacute;quipe
+              {t("teams.nameLabel")}
             </label>
             <input
               type="text"
               className="input w-full"
-              placeholder="Ex : Marketing, Produit..."
+              placeholder={t("teams.namePlaceholder")}
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               required
@@ -148,12 +149,12 @@ export default function TeamsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              {t("teams.descLabel")}
             </label>
             <textarea
               className="input w-full"
               rows={3}
-              placeholder="D&eacute;crivez le r&ocirc;le de cette &eacute;quipe..."
+              placeholder={t("teams.descPlaceholder")}
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
             />
@@ -168,7 +169,7 @@ export default function TeamsPage() {
                 setFormDescription("");
               }}
             >
-              Annuler
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -178,7 +179,7 @@ export default function TeamsPage() {
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "Cr\u00E9er"
+                t("common.create")
               )}
             </button>
           </div>

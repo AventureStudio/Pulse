@@ -17,8 +17,10 @@ import type { Objective, Period } from "@/types";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import EmptyState from "@/components/ui/EmptyState";
+import { useI18n } from "@/lib/i18n";
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
@@ -91,25 +93,25 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      label: "Objectifs",
+      label: t("dashboard.totalObjectives"),
       value: totalObjectives,
       icon: Target,
       color: "text-primary-600 bg-primary-100",
     },
     {
-      label: "En bonne voie",
+      label: t("dashboard.onTrack"),
       value: onTrackCount,
       icon: TrendingUp,
       color: "text-success-600 bg-success-100",
     },
     {
-      label: "\u00C0 risque",
+      label: t("dashboard.atRisk"),
       value: atRiskCount,
       icon: AlertTriangle,
       color: "text-warning-600 bg-warning-100",
     },
     {
-      label: "En retard",
+      label: t("dashboard.offTrack"),
       value: offTrackCount,
       icon: XCircle,
       color: "text-danger-600 bg-danger-100",
@@ -121,8 +123,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Vue d&apos;ensemble de vos OKRs</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.title")}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t("dashboard.subtitle")}</p>
         </div>
         <select
           className="input"
@@ -149,9 +151,9 @@ export default function DashboardPage() {
       ) : totalObjectives === 0 ? (
         <EmptyState
           icon={<Activity className="w-7 h-7" />}
-          title="Commencez par cr\u00E9er vos OKRs"
-          description="D\u00E9finissez vos objectifs et r\u00E9sultats cl\u00E9s pour suivre la progression de votre \u00E9quipe."
-          action={{ label: "Cr\u00E9er un objectif", href: "/objectives/new" }}
+          title={t("dashboard.emptyTitle")}
+          description={t("dashboard.emptyDesc")}
+          action={{ label: t("dashboard.createObjective"), href: "/objectives/new" }}
         />
       ) : (
         <>
@@ -176,7 +178,7 @@ export default function DashboardPage() {
           <div className="card p-5 mb-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-500">
-                Progression moyenne
+                {t("dashboard.avgProgress")}
               </span>
               <span className="text-lg font-bold text-gray-900">{avgProgress}%</span>
             </div>
@@ -187,7 +189,7 @@ export default function DashboardPage() {
             {/* Recent objectives */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Objectifs r&eacute;cents
+                {t("dashboard.recentObjectives")}
               </h2>
               <div className="space-y-3">
                 {recentObjectives.map((obj) => (
@@ -211,24 +213,24 @@ export default function DashboardPage() {
             {/* Breakdown by level */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Par niveau
+                {t("dashboard.byLevel")}
               </h2>
               <div className="space-y-5">
                 {[
                   {
-                    label: "Entreprise",
+                    label: t("level.company"),
                     icon: Building2,
                     count: companyObjectives.length,
                     progress: avgProgressForLevel(companyObjectives),
                   },
                   {
-                    label: "\u00C9quipe",
+                    label: t("level.team"),
                     icon: Users,
                     count: teamObjectives.length,
                     progress: avgProgressForLevel(teamObjectives),
                   },
                   {
-                    label: "Individuel",
+                    label: t("level.individual"),
                     icon: User,
                     count: individualObjectives.length,
                     progress: avgProgressForLevel(individualObjectives),

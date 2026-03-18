@@ -5,8 +5,10 @@ import { Calendar, Plus, Loader2, Check } from "lucide-react";
 import type { Period } from "@/types";
 import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
+import { useI18n } from "@/lib/i18n";
 
 export default function PeriodsPage() {
+  const { t } = useI18n();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,13 +98,13 @@ export default function PeriodsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">P&eacute;riodes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("periods.title")}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            G&eacute;rez les cycles OKR (trimestres, semestres...)
+            {t("periods.subtitle")}
           </p>
         </div>
         <button className="btn-primary btn-md" onClick={() => setModalOpen(true)}>
-          <Plus className="w-4 h-4" /> Nouvelle p&eacute;riode
+          <Plus className="w-4 h-4" /> {t("periods.new")}
         </button>
       </div>
 
@@ -119,8 +121,8 @@ export default function PeriodsPage() {
       ) : periods.length === 0 ? (
         <EmptyState
           icon={<Calendar className="w-7 h-7" />}
-          title="D\u00E9finissez vos p\u00E9riodes OKR"
-          description="Cr\u00E9ez des trimestres ou semestres pour organiser vos objectifs dans le temps."
+          title={t("periods.emptyTitle")}
+          description={t("periods.emptyDesc")}
         />
       ) : (
         <div className="space-y-4">
@@ -146,12 +148,12 @@ export default function PeriodsPage() {
                     </h3>
                     {period.isActive && (
                       <span className="badge bg-emerald-50 text-emerald-700 text-xs">
-                        Actif
+                        {t("common.active")}
                       </span>
                     )}
                   </div>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    {formatDate(period.startDate)} &mdash;{" "}
+                    {formatDate(period.startDate)} {"\u2014"}{" "}
                     {formatDate(period.endDate)}
                   </p>
                 </div>
@@ -162,7 +164,7 @@ export default function PeriodsPage() {
                   className="btn-secondary btn-md"
                   onClick={() => handleActivate(period.id)}
                 >
-                  <Check className="w-4 h-4" /> Activer
+                  <Check className="w-4 h-4" /> {t("periods.activate")}
                 </button>
               )}
             </div>
@@ -177,18 +179,18 @@ export default function PeriodsPage() {
           setModalOpen(false);
           resetForm();
         }}
-        title="Nouvelle p\u00E9riode"
+        title={t("periods.new")}
         size="sm"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Libell&eacute;
+              {t("periods.labelField")}
             </label>
             <input
               type="text"
               className="input w-full"
-              placeholder="Ex : Q1 2026, S1 2026..."
+              placeholder={t("periods.labelPlaceholder")}
               value={formLabel}
               onChange={(e) => setFormLabel(e.target.value)}
               required
@@ -197,7 +199,7 @@ export default function PeriodsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date de d&eacute;but
+                {t("periods.startDate")}
               </label>
               <input
                 type="date"
@@ -209,7 +211,7 @@ export default function PeriodsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date de fin
+                {t("periods.endDate")}
               </label>
               <input
                 type="date"
@@ -229,7 +231,7 @@ export default function PeriodsPage() {
               className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
             />
             <label htmlFor="isActive" className="text-sm text-gray-700">
-              D&eacute;finir comme p&eacute;riode active
+              {t("periods.setActive")}
             </label>
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -241,7 +243,7 @@ export default function PeriodsPage() {
                 resetForm();
               }}
             >
-              Annuler
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -253,7 +255,7 @@ export default function PeriodsPage() {
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "Cr\u00E9er"
+                t("common.create")
               )}
             </button>
           </div>

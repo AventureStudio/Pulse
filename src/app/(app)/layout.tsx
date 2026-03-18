@@ -13,17 +13,20 @@ import {
   Activity,
   ChevronLeft,
   LogOut,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/lib/supabase-auth";
+import { useI18n } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/objectives", label: "Objectifs", icon: Target },
-  { href: "/alignment", label: "Alignement", icon: GitBranch },
-  { href: "/teams", label: "Équipes", icon: Users },
-  { href: "/periods", label: "Périodes", icon: Calendar },
-  { href: "/settings", label: "Paramètres", icon: Settings },
+const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/objectives", labelKey: "nav.objectives", icon: Target },
+  { href: "/alignment", labelKey: "nav.alignment", icon: GitBranch },
+  { href: "/teams", labelKey: "nav.teams", icon: Users },
+  { href: "/periods", labelKey: "nav.periods", icon: Calendar },
+  { href: "/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
 export default function AppLayout({
@@ -35,6 +38,7 @@ export default function AppLayout({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, loading } = useAuth();
+  const { t, locale, setLocale } = useI18n();
 
   // Redirect to login if not authenticated (after loading is done)
   useEffect(() => {
@@ -48,6 +52,10 @@ export default function AppLayout({
     window.location.href = "/login";
   }
 
+  function toggleLocale() {
+    setLocale(locale === "fr" ? "en" : "fr");
+  }
+
   // Loading or redirecting state
   if (loading || !user) {
     return (
@@ -57,7 +65,7 @@ export default function AppLayout({
             <Activity className="w-6 h-6 text-white animate-pulse" />
           </div>
           <span className="text-sm text-gray-500">
-            {loading ? "Chargement..." : "Redirection..."}
+            {loading ? t("common.loading") : t("common.redirecting")}
           </span>
         </div>
       </div>
@@ -95,6 +103,7 @@ export default function AppLayout({
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
+            const label = t(item.labelKey);
             return (
               <Link
                 key={item.href}
@@ -104,14 +113,30 @@ export default function AppLayout({
                     ? "bg-primary-50 text-primary-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
-                title={!sidebarOpen ? item.label : undefined}
+                title={!sidebarOpen ? label : undefined}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary-600" : ""}`} />
-                {sidebarOpen && <span>{item.label}</span>}
+                {sidebarOpen && <span>{label}</span>}
               </Link>
             );
           })}
         </nav>
+
+        {/* Language switcher */}
+        <div className="border-t border-gray-100 px-3 py-2">
+          <button
+            onClick={toggleLocale}
+            className={`flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all`}
+            title={sidebarOpen ? undefined : t("lang.toggle")}
+          >
+            <Globe className="w-5 h-5 flex-shrink-0" />
+            {sidebarOpen && (
+              <span>
+                {locale === "fr" ? "FR" : "EN"} → {t("lang.toggle")}
+              </span>
+            )}
+          </button>
+        </div>
 
         {/* User footer */}
         <div className="border-t border-gray-100 p-3">
@@ -136,7 +161,7 @@ export default function AppLayout({
               <button
                 onClick={handleSignOut}
                 className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-                title="Se déconnecter"
+                title={t("auth.signOut")}
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -159,7 +184,7 @@ export default function AppLayout({
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           );
         })}

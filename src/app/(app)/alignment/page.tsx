@@ -14,15 +14,7 @@ import type { Objective, Period, AlignmentNode } from "@/types";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import EmptyState from "@/components/ui/EmptyState";
-
-const levelConfig: Record<
-  string,
-  { label: string; icon: typeof Building2; color: string }
-> = {
-  company: { label: "Entreprise", icon: Building2, color: "text-purple-600 bg-purple-100" },
-  team: { label: "\u00C9quipe", icon: Users, color: "text-blue-600 bg-blue-100" },
-  individual: { label: "Individuel", icon: User, color: "text-teal-600 bg-teal-100" },
-};
+import { useI18n } from "@/lib/i18n";
 
 function buildTree(objectives: Objective[]): AlignmentNode[] {
   const map = new Map<string, AlignmentNode>();
@@ -73,6 +65,17 @@ function buildTree(objectives: Objective[]): AlignmentNode[] {
 function TreeNode({ node }: { node: AlignmentNode }) {
   const [expanded, setExpanded] = useState(true);
   const obj = node.objective;
+  const { t } = useI18n();
+
+  const levelConfig: Record<
+    string,
+    { label: string; icon: typeof Building2; color: string }
+  > = {
+    company: { label: t("level.company"), icon: Building2, color: "text-purple-600 bg-purple-100" },
+    team: { label: t("level.team"), icon: Users, color: "text-blue-600 bg-blue-100" },
+    individual: { label: t("level.individual"), icon: User, color: "text-teal-600 bg-teal-100" },
+  };
+
   const config = levelConfig[obj.level];
   const LevelIcon = config.icon;
   const hasChildren = node.children.length > 0;
@@ -146,10 +149,20 @@ function TreeNode({ node }: { node: AlignmentNode }) {
 }
 
 export default function AlignmentPage() {
+  const { t } = useI18n();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+
+  const levelConfig: Record<
+    string,
+    { label: string; icon: typeof Building2; color: string }
+  > = {
+    company: { label: t("level.company"), icon: Building2, color: "text-purple-600 bg-purple-100" },
+    team: { label: t("level.team"), icon: Users, color: "text-blue-600 bg-blue-100" },
+    individual: { label: t("level.individual"), icon: User, color: "text-teal-600 bg-teal-100" },
+  };
 
   // Fetch periods
   useEffect(() => {
@@ -200,9 +213,9 @@ export default function AlignmentPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Alignement</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("alignment.title")}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Visualisez la hi&eacute;rarchie de vos OKRs
+            {t("alignment.subtitle")}
           </p>
         </div>
         <select
@@ -212,7 +225,7 @@ export default function AlignmentPage() {
         >
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.label} {p.isActive ? "(actif)" : ""}
+              {p.label} {p.isActive ? `(${t("common.active").toLowerCase()})` : ""}
             </option>
           ))}
         </select>
@@ -243,9 +256,9 @@ export default function AlignmentPage() {
       ) : objectives.length === 0 ? (
         <EmptyState
           icon={<GitBranch className="w-7 h-7" />}
-          title="Arbre d'alignement"
-          description="L'arbre d'alignement appara\u00EEtra ici lorsque vous aurez des objectifs avec des liens parent/enfant."
-          action={{ label: "Cr\u00E9er un objectif", href: "/objectives/new" }}
+          title={t("alignment.emptyTitle")}
+          description={t("alignment.emptyDesc")}
+          action={{ label: t("objectives.new"), href: "/objectives/new" }}
         />
       ) : (
         <div className="card p-6">

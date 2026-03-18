@@ -6,8 +6,10 @@ import { Target, Plus, Search, Loader2 } from "lucide-react";
 import type { Objective, Period, ObjectiveLevel, ObjectiveStatus } from "@/types";
 import ObjectiveCard from "@/components/objectives/ObjectiveCard";
 import EmptyState from "@/components/ui/EmptyState";
+import { useI18n } from "@/lib/i18n";
 
 export default function ObjectivesPage() {
+  const { t } = useI18n();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,13 +73,13 @@ export default function ObjectivesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Objectifs</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("objectives.title")}</h1>
           <p className="text-gray-500 text-sm mt-1">
-            G&eacute;rez vos objectifs et r&eacute;sultats cl&eacute;s
+            {t("objectives.subtitle")}
           </p>
         </div>
         <Link href="/objectives/new" className="btn-primary btn-md">
-          <Plus className="w-4 h-4" /> Nouvel objectif
+          <Plus className="w-4 h-4" /> {t("objectives.new")}
         </Link>
       </div>
 
@@ -102,9 +104,9 @@ export default function ObjectivesPage() {
           onChange={(e) => setLevelFilter(e.target.value as ObjectiveLevel | "all")}
         >
           <option value="all">Tous les niveaux</option>
-          <option value="company">Entreprise</option>
-          <option value="team">&Eacute;quipe</option>
-          <option value="individual">Individuel</option>
+          <option value="company">{t("level.company")}</option>
+          <option value="team">{t("level.team")}</option>
+          <option value="individual">{t("level.individual")}</option>
         </select>
 
         {/* Status filter */}
@@ -114,10 +116,10 @@ export default function ObjectivesPage() {
           onChange={(e) => setStatusFilter(e.target.value as ObjectiveStatus | "all")}
         >
           <option value="all">Tous les statuts</option>
-          <option value="draft">Brouillon</option>
-          <option value="active">Actif</option>
-          <option value="completed">Termin&eacute;</option>
-          <option value="cancelled">Annul&eacute;</option>
+          <option value="draft">{t("status.draft")}</option>
+          <option value="active">{t("status.active")}</option>
+          <option value="completed">{t("status.completed")}</option>
+          <option value="cancelled">{t("status.cancelled")}</option>
         </select>
 
         {/* Search */}
@@ -148,9 +150,9 @@ export default function ObjectivesPage() {
       ) : filteredObjectives.length === 0 ? (
         <EmptyState
           icon={<Target className="w-7 h-7" />}
-          title="Aucun objectif pour le moment"
-          description="Cr&eacute;ez votre premier objectif pour commencer &agrave; suivre vos OKRs."
-          action={{ label: "Nouvel objectif", href: "/objectives/new" }}
+          title={t("objectives.emptyTitle")}
+          description={t("objectives.emptyDesc")}
+          action={{ label: t("objectives.new"), href: "/objectives/new" }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -6,8 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import type { Objective, Period, Team } from "@/types";
 import ObjectiveForm, { type ObjectiveFormData } from "@/components/objectives/ObjectiveForm";
+import { useI18n } from "@/lib/i18n";
 
 export default function EditObjectivePage() {
+  const { t } = useI18n();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -79,7 +81,7 @@ export default function EditObjectivePage() {
       <div className="p-6 lg:p-8 max-w-3xl mx-auto">
         <p className="text-gray-500">Objectif introuvable.</p>
         <Link href="/objectives" className="btn-secondary btn-md mt-4 inline-flex">
-          <ArrowLeft className="w-4 h-4" /> Retour
+          <ArrowLeft className="w-4 h-4" /> {t("common.back")}
         </Link>
       </div>
     );
@@ -91,13 +93,13 @@ export default function EditObjectivePage() {
         href={`/objectives/${id}`}
         className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6"
       >
-        <ArrowLeft className="w-4 h-4" /> Retour &agrave; l&apos;objectif
+        <ArrowLeft className="w-4 h-4" /> {t("objectives.edit.backToObjective")}
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Modifier l&apos;objectif</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("objectives.edit.title")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Mettez &agrave; jour les informations de cet objectif
+          {t("objectives.edit.subtitle")}
         </p>
       </div>
 
