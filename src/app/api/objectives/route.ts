@@ -56,13 +56,13 @@ export async function POST(request: NextRequest) {
     .from("objectives")
     .insert({
       title: body.title,
-      description: body.description ?? "",
+      description: body.description || "",
       level: body.level,
-      owner_id: body.ownerId,
-      team_id: body.teamId ?? null,
+      owner_id: body.ownerId || null,
+      team_id: body.teamId || null,
       period_id: body.periodId,
-      parent_objective_id: body.parentObjectiveId ?? null,
-      status: body.status ?? "draft",
+      parent_objective_id: body.parentObjectiveId || null,
+      status: body.status || "draft",
     })
     .select()
     .single();

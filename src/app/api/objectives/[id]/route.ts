@@ -47,11 +47,11 @@ export async function PUT(
   if (body.title !== undefined) updateFields.title = body.title;
   if (body.description !== undefined) updateFields.description = body.description;
   if (body.level !== undefined) updateFields.level = body.level;
-  if (body.ownerId !== undefined) updateFields.owner_id = body.ownerId;
-  if (body.teamId !== undefined) updateFields.team_id = body.teamId;
+  if (body.ownerId !== undefined) updateFields.owner_id = body.ownerId || null;
+  if (body.teamId !== undefined) updateFields.team_id = body.teamId || null;
   if (body.periodId !== undefined) updateFields.period_id = body.periodId;
   if (body.parentObjectiveId !== undefined)
-    updateFields.parent_objective_id = body.parentObjectiveId;
+    updateFields.parent_objective_id = body.parentObjectiveId || null;
   if (body.status !== undefined) updateFields.status = body.status;
   if (body.progress !== undefined) updateFields.progress = body.progress;
   if (body.confidence !== undefined) updateFields.confidence = body.confidence;
