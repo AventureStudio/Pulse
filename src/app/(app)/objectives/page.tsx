@@ -92,7 +92,7 @@ export default function ObjectivesPage() {
         >
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.label} {p.isActive ? "(actif)" : ""}
+              {p.label} {p.isActive ? `(${t("common.active").toLowerCase()})` : ""}
             </option>
           ))}
         </select>
@@ -103,7 +103,7 @@ export default function ObjectivesPage() {
           value={levelFilter}
           onChange={(e) => setLevelFilter(e.target.value as ObjectiveLevel | "all")}
         >
-          <option value="all">Tous les niveaux</option>
+          <option value="all">{t("objectives.allLevels")}</option>
           <option value="company">{t("level.company")}</option>
           <option value="team">{t("level.team")}</option>
           <option value="individual">{t("level.individual")}</option>
@@ -115,7 +115,7 @@ export default function ObjectivesPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ObjectiveStatus | "all")}
         >
-          <option value="all">Tous les statuts</option>
+          <option value="all">{t("objectives.allStatuses")}</option>
           <option value="draft">{t("status.draft")}</option>
           <option value="active">{t("status.active")}</option>
           <option value="completed">{t("status.completed")}</option>
@@ -127,7 +127,7 @@ export default function ObjectivesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher un objectif..."
+            placeholder={t("objectives.searchPlaceholder")}
             className="input pl-9 w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

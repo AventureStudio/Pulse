@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { signInWithMagicLink } from "@/lib/supabase-auth";
+import { useI18n } from "@/lib/i18n";
 import { Mail, ArrowRight, CheckCircle } from "lucide-react";
 
 export default function LoginPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,20 +42,20 @@ export default function LoginPage() {
             <CheckCircle className="w-7 h-7 text-success-600" />
           </div>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            Vérifiez votre email
+            {t("auth.checkEmail")}
           </h2>
           <p className="text-sm text-gray-500 mb-1">
-            Un lien de connexion a été envoyé à
+            {t("auth.linkSentTo")}
           </p>
           <p className="font-medium text-gray-800 mb-6">{email}</p>
           <p className="text-xs text-gray-400 mb-6">
-            Cliquez sur le lien dans l&apos;email pour vous connecter. Le lien expire dans 1 heure.
+            {t("auth.linkExpiry")}
           </p>
           <button
             onClick={() => { setSent(false); setEmail(""); }}
             className="btn-ghost btn-sm text-primary-600"
           >
-            Utiliser un autre email
+            {t("auth.useAnotherEmail")}
           </button>
         </div>
       </div>
@@ -64,10 +66,10 @@ export default function LoginPage() {
     <div className="w-full max-w-sm">
       <div className="card p-8">
         <h1 className="text-xl font-semibold text-gray-900 text-center mb-2">
-          Bienvenue sur Pulse
+          {t("auth.welcome")}
         </h1>
         <p className="text-sm text-gray-500 text-center mb-6">
-          Entrez votre email pour recevoir un lien de connexion
+          {t("auth.magicLinkPrompt")}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -79,7 +81,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Email professionnel
+              {t("auth.emailLabel")}
             </label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -89,7 +91,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input w-full pl-11"
-                placeholder="vous@entreprise.com"
+                placeholder={t("auth.emailPlaceholder")}
                 required
                 autoComplete="email"
                 autoFocus
@@ -99,10 +101,10 @@ export default function LoginPage() {
 
           <button type="submit" disabled={loading || !email.trim()} className="btn-primary btn-lg w-full">
             {loading ? (
-              "Envoi en cours..."
+              t("auth.sending")
             ) : (
               <>
-                Recevoir le lien
+                {t("auth.sendLink")}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -110,7 +112,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-xs text-gray-400 text-center mt-6">
-          Pas de mot de passe requis. Un nouveau compte sera créé automatiquement si nécessaire.
+          {t("auth.noPasswordRequired")}
         </p>
       </div>
     </div>

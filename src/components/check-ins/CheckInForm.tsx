@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
 import type { Confidence, KeyResult } from "@/types";
 import { ArrowRight } from "lucide-react";
 import { type FormEvent, useCallback, useMemo, useState } from "react";
@@ -24,19 +25,13 @@ interface CheckInFormProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const confidenceOptions: { value: Confidence; label: string; dot: string }[] = [
-  { value: "on_track", label: "En bonne voie", dot: "bg-emerald-500" },
-  { value: "at_risk", label: "A risque", dot: "bg-amber-500" },
-  { value: "off_track", label: "En retard", dot: "bg-red-500" },
-];
-
 function computeProgress(current: number, start: number, target: number): number {
   if (target === start) return current >= target ? 100 : 0;
   return Math.min(100, Math.max(0, Math.round(((current - start) / (target - start)) * 100)));
 }
 
-function formatValue(value: number, kr: KeyResult): string {
-  if (kr.metricType === "boolean") return value >= 1 ? "Oui" : "Non";
+function formatValue(value: number, kr: KeyResult, yes: string, no: string): string {
+  if (kr.metricType === "boolean") return value >= 1 ? yes : no;
   if (kr.metricType === "percentage") return `${value}%`;
   if (kr.metricType === "currency")
     return `${value.toLocaleString("fr-FR")} ${kr.unit || "\u20AC"}`;
@@ -52,11 +47,19 @@ export default function CheckInForm({
   onSubmit,
   onCancel,
 }: CheckInFormProps) {
+  const { t } = useI18n();
+
   const [form, setForm] = useState<CheckInFormData>({
     newValue: keyResult.currentValue,
     confidence: keyResult.confidence,
     note: "",
   });
+
+  const confidenceOptions: { value: Confidence; label: string; dot: string }[] = [
+    { value: "on_track", label: t("confidence.on_track"), dot: "bg-emerald-500" },
+    { value: "at_risk", label: t("confidence.at_risk"), dot: "bg-amber-500" },
+    { value: "off_track", label: t("confidence.off_track"), dot: "bg-red-500" },
+  ];
 
   const projectedProgress = useMemo(
     () => computeProgress(form.newValue, keyResult.startValue, keyResult.targetValue),
@@ -76,16 +79,16 @@ export default function CheckInForm({
       {/* Context bar */}
       <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm">
         <div>
-          <span className="text-gray-500">Actuel : </span>
+          <span className="text-gray-500">{t("form.checkin.currentValue")} : </span>
           <span className="font-semibold text-gray-800">
-            {formatValue(keyResult.currentValue, keyResult)}
+            {formatValue(keyResult.currentValue, keyResult, t("common.yes"), t("common.no"))}
           </span>
         </div>
         <ArrowRight className="h-4 w-4 text-gray-400" />
         <div>
-          <span className="text-gray-500">Cible : </span>
+          <span className="text-gray-500">{t("form.checkin.targetValue")} : </span>
           <span className="font-semibold text-gray-800">
-            {formatValue(keyResult.targetValue, keyResult)}
+            {formatValue(keyResult.targetValue, keyResult, t("common.yes"), t("common.no"))}
           </span>
         </div>
       </div>
@@ -93,7 +96,7 @@ export default function CheckInForm({
       {/* New value */}
       <div>
         <label htmlFor="ci-value" className="mb-1 block text-sm font-medium text-gray-700">
-          Nouvelle valeur
+          {t("form.checkin.newValue")}
         </label>
         <input
           id="ci-value"
@@ -105,14 +108,14 @@ export default function CheckInForm({
         />
         {/* Projected progress */}
         <p className="mt-1.5 text-xs text-gray-500">
-          Progression apres mise a jour :{" "}
+          {t("form.checkin.projectedProgress")} :{" "}
           <span className="font-semibold text-gray-700">{projectedProgress}%</span>
         </p>
       </div>
 
       {/* Confidence */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">Confiance</label>
+        <label className="mb-1 block text-sm font-medium text-gray-700">{t("form.checkin.confidence")}</label>
         <div className="flex gap-2">
           {confidenceOptions.map((opt) => {
             const active = form.confidence === opt.value;
@@ -138,12 +141,12 @@ export default function CheckInForm({
       {/* Note */}
       <div>
         <label htmlFor="ci-note" className="mb-1 block text-sm font-medium text-gray-700">
-          Note
+          {t("form.checkin.note")}
         </label>
         <textarea
           id="ci-note"
           className="input min-h-[80px] resize-y"
-          placeholder="Qu'est-ce qui a change depuis le dernier check-in ?"
+          placeholder={t("form.checkin.notePlaceholder")}
           value={form.note}
           onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
           rows={3}
@@ -153,10 +156,10 @@ export default function CheckInForm({
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
         <button type="button" onClick={onCancel} className="btn-secondary btn-md">
-          Annuler
+          {t("common.cancel")}
         </button>
         <button type="submit" className="btn-primary btn-md">
-          Enregistrer le check-in
+          {t("form.checkin.submit")}
         </button>
       </div>
     </form>

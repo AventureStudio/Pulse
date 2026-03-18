@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
 import type {
   Objective,
   ObjectiveLevel,
@@ -49,31 +50,13 @@ interface ObjectiveFormProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const levelOptions: { value: ObjectiveLevel; label: string; icon: typeof Building2 }[] = [
-  { value: "company", label: "Entreprise", icon: Building2 },
-  { value: "team", label: "Equipe", icon: Users },
-  { value: "individual", label: "Individuel", icon: Users },
+const levelOptionsDef: { value: ObjectiveLevel; icon: typeof Building2 }[] = [
+  { value: "company", icon: Building2 },
+  { value: "team", icon: Users },
+  { value: "individual", icon: Users },
 ];
 
-const statusOptions: { value: ObjectiveStatus; label: string }[] = [
-  { value: "draft", label: "Brouillon" },
-  { value: "active", label: "Actif" },
-  { value: "completed", label: "Termine" },
-  { value: "cancelled", label: "Annule" },
-];
-
-const helpTexts: Record<string, string> = {
-  title:
-    "Un bon objectif est ambitieux, qualitatif et inspirant. Par exemple : Devenir la reference du marche.",
-  description:
-    "Ajoutez du contexte pour que toute l'equipe comprenne l'intention derriere cet objectif.",
-  level:
-    "Entreprise : objectif strategique global. Equipe : objectif de groupe. Individuel : contribution personnelle.",
-  period: "Selectionnez la periode (trimestre, semestre...) durant laquelle cet objectif sera poursuivi.",
-  team: "L'equipe responsable de cet objectif.",
-  parentObjectiveId:
-    "Alignez cet objectif sur un objectif de niveau superieur pour garantir la coherence strategique.",
-};
+const statusOptionValues: ObjectiveStatus[] = ["draft", "active", "completed", "cancelled"];
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -87,6 +70,7 @@ export default function ObjectiveForm({
   onSubmit,
   onCancel,
 }: ObjectiveFormProps) {
+  const { t } = useI18n();
   const isEdit = Boolean(objective);
 
   const [step, setStep] = useState(1);
@@ -100,6 +84,19 @@ export default function ObjectiveForm({
     status: objective?.status ?? "draft",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObjectiveFormData, string>>>({});
+
+  /* ---- Translated help texts ---- */
+  const helpTexts: Record<string, string> = useMemo(
+    () => ({
+      title: t("form.objective.step1Help"),
+      description: t("form.objective.step2Help"),
+      level: t("form.objective.helpLevel"),
+      period: t("form.objective.helpPeriod"),
+      team: t("form.objective.helpTeam"),
+      parentObjectiveId: t("form.objective.helpParent"),
+    }),
+    [t],
+  );
 
   /* ---- Field updater ---- */
   const set = useCallback(
@@ -118,12 +115,12 @@ export default function ObjectiveForm({
   const validate = useCallback(
     (s: number): boolean => {
       const errs: typeof errors = {};
-      if (s >= 1 && !form.title.trim()) errs.title = "Le titre est requis.";
-      if (s >= 2 && !form.periodId) errs.periodId = "La periode est requise.";
+      if (s >= 1 && !form.title.trim()) errs.title = t("form.objective.titleRequired");
+      if (s >= 2 && !form.periodId) errs.periodId = t("form.objective.periodRequired");
       setErrors(errs);
       return Object.keys(errs).length === 0;
     },
-    [form],
+    [form, t],
   );
 
   /* ---- Navigation ---- */
@@ -148,13 +145,25 @@ export default function ObjectiveForm({
     [periods, form.periodId],
   );
   const selectedTeam = useMemo(
-    () => teams.find((t) => t.id === form.teamId),
+    () => teams.find((tm) => tm.id === form.teamId),
     [teams, form.teamId],
   );
   const selectedParent = useMemo(
     () => parentObjectives.find((o) => o.id === form.parentObjectiveId),
     [parentObjectives, form.parentObjectiveId],
   );
+
+  /* ---- Level label helper ---- */
+  const levelLabel = (value: ObjectiveLevel) => {
+    const key = `level.${value}` as const;
+    return t(key);
+  };
+
+  /* ---- Status label helper ---- */
+  const statusLabel = (value: ObjectiveStatus) => {
+    const key = `status.${value}` as const;
+    return t(key);
+  };
 
   /* ---- Reusable help hint ---- */
   const Hint = ({ field }: { field: string }) => (
@@ -192,23 +201,23 @@ export default function ObjectiveForm({
           </div>
         ))}
         <span className="ml-2 text-xs text-gray-500">
-          Etape {step} sur 3
+          {t("form.objective.step")} {step} {t("form.objective.of")} 3
         </span>
       </div>
 
-      {/* ── Step 1: Identite ── */}
+      {/* ── Step 1: Identity ── */}
       {step === 1 && (
         <div className="space-y-4">
           {/* Title */}
           <div>
             <label htmlFor="obj-title" className="mb-1 block text-sm font-medium text-gray-700">
-              Titre <span className="text-red-500">*</span>
+              {t("form.objective.titleLabel")} <span className="text-red-500">*</span>
             </label>
             <input
               id="obj-title"
               type="text"
               className={`input ${errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
-              placeholder="Ex : Devenir la reference du marche"
+              placeholder={t("form.objective.titlePlaceholder")}
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
             />
@@ -219,12 +228,12 @@ export default function ObjectiveForm({
           {/* Description */}
           <div>
             <label htmlFor="obj-desc" className="mb-1 block text-sm font-medium text-gray-700">
-              Description
+              {t("form.objective.descLabel")}
             </label>
             <textarea
               id="obj-desc"
               className="input min-h-[100px] resize-y"
-              placeholder="Pourquoi cet objectif est-il important ?"
+              placeholder={t("form.objective.descPlaceholder")}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               rows={4}
@@ -234,9 +243,9 @@ export default function ObjectiveForm({
 
           {/* Level */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Niveau</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">{t("form.objective.levelLabel")}</label>
             <div className="flex gap-2">
-              {levelOptions.map((opt) => {
+              {levelOptionsDef.map((opt) => {
                 const Icon = opt.icon;
                 const active = form.level === opt.value;
                 return (
@@ -251,7 +260,7 @@ export default function ObjectiveForm({
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {opt.label}
+                    {levelLabel(opt.value)}
                   </button>
                 );
               })}
@@ -261,13 +270,13 @@ export default function ObjectiveForm({
         </div>
       )}
 
-      {/* ── Step 2: Contexte ── */}
+      {/* ── Step 2: Context ── */}
       {step === 2 && (
         <div className="space-y-4">
           {/* Period */}
           <div>
             <label htmlFor="obj-period" className="mb-1 block text-sm font-medium text-gray-700">
-              Periode <span className="text-red-500">*</span>
+              {t("form.objective.periodLabel")} <span className="text-red-500">*</span>
             </label>
             <select
               id="obj-period"
@@ -275,11 +284,11 @@ export default function ObjectiveForm({
               value={form.periodId}
               onChange={(e) => set("periodId", e.target.value)}
             >
-              <option value="">Selectionnez une periode</option>
+              <option value="">{t("form.objective.selectPeriod")}</option>
               {periods.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
-                  {p.isActive ? " (en cours)" : ""}
+                  {p.isActive ? ` ${t("form.objective.currentSuffix")}` : ""}
                 </option>
               ))}
             </select>
@@ -291,7 +300,7 @@ export default function ObjectiveForm({
           {form.level !== "company" && (
             <div>
               <label htmlFor="obj-team" className="mb-1 block text-sm font-medium text-gray-700">
-                Equipe
+                {t("form.objective.teamLabel")}
               </label>
               <select
                 id="obj-team"
@@ -299,10 +308,10 @@ export default function ObjectiveForm({
                 value={form.teamId}
                 onChange={(e) => set("teamId", e.target.value)}
               >
-                <option value="">Aucune equipe</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+                <option value="">{t("form.objective.noTeam")}</option>
+                {teams.map((tm) => (
+                  <option key={tm.id} value={tm.id}>
+                    {tm.name}
                   </option>
                 ))}
               </select>
@@ -313,7 +322,7 @@ export default function ObjectiveForm({
           {/* Parent alignment */}
           <div>
             <label htmlFor="obj-parent" className="mb-1 block text-sm font-medium text-gray-700">
-              Alignement (objectif parent)
+              {t("form.objective.parentLabel")}
             </label>
             <select
               id="obj-parent"
@@ -321,7 +330,7 @@ export default function ObjectiveForm({
               value={form.parentObjectiveId}
               onChange={(e) => set("parentObjectiveId", e.target.value)}
             >
-              <option value="">Aucun alignement</option>
+              <option value="">{t("form.objective.selectParent")}</option>
               {parentObjectives.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.title}
@@ -334,7 +343,7 @@ export default function ObjectiveForm({
           {/* Status */}
           <div>
             <label htmlFor="obj-status" className="mb-1 block text-sm font-medium text-gray-700">
-              Statut
+              {t("form.objective.statusLabel")}
             </label>
             <select
               id="obj-status"
@@ -342,9 +351,9 @@ export default function ObjectiveForm({
               value={form.status}
               onChange={(e) => set("status", e.target.value as ObjectiveStatus)}
             >
-              {statusOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
+              {statusOptionValues.map((value) => (
+                <option key={value} value={value}>
+                  {statusLabel(value)}
                 </option>
               ))}
             </select>
@@ -355,43 +364,43 @@ export default function ObjectiveForm({
       {/* ── Step 3: Review ── */}
       {step === 3 && (
         <div className="space-y-3 rounded-xl bg-gray-50 p-4 text-sm">
-          <h4 className="font-semibold text-gray-900">Recapitulatif</h4>
+          <h4 className="font-semibold text-gray-900">{t("form.objective.step3Title")}</h4>
           <dl className="space-y-2 text-gray-700">
             <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">Titre</dt>
+              <dt className="font-medium text-gray-500">{t("form.objective.titleLabel")}</dt>
               <dd className="text-right max-w-[60%]">{form.title}</dd>
             </div>
             {form.description && (
               <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">Description</dt>
+                <dt className="font-medium text-gray-500">{t("form.objective.descLabel")}</dt>
                 <dd className="text-right max-w-[60%] line-clamp-2">{form.description}</dd>
               </div>
             )}
             <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">Niveau</dt>
-              <dd>{levelOptions.find((l) => l.value === form.level)?.label}</dd>
+              <dt className="font-medium text-gray-500">{t("form.objective.levelLabel")}</dt>
+              <dd>{levelLabel(form.level)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">Periode</dt>
-              <dd>{selectedPeriod?.label ?? "—"}</dd>
+              <dt className="font-medium text-gray-500">{t("form.objective.periodLabel")}</dt>
+              <dd>{selectedPeriod?.label ?? "\u2014"}</dd>
             </div>
             {form.level !== "company" && (
               <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">Equipe</dt>
-                <dd>{selectedTeam?.name ?? "—"}</dd>
+                <dt className="font-medium text-gray-500">{t("form.objective.teamLabel")}</dt>
+                <dd>{selectedTeam?.name ?? "\u2014"}</dd>
               </div>
             )}
             {form.parentObjectiveId && (
               <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">Aligne sur</dt>
+                <dt className="font-medium text-gray-500">{t("form.objective.alignedOn")}</dt>
                 <dd className="text-right max-w-[60%] line-clamp-1">
-                  {selectedParent?.title ?? "—"}
+                  {selectedParent?.title ?? "\u2014"}
                 </dd>
               </div>
             )}
             <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">Statut</dt>
-              <dd>{statusOptions.find((s) => s.value === form.status)?.label}</dd>
+              <dt className="font-medium text-gray-500">{t("form.objective.statusLabel")}</dt>
+              <dd>{statusLabel(form.status)}</dd>
             </div>
           </dl>
         </div>
@@ -403,23 +412,23 @@ export default function ObjectiveForm({
           {step > 1 && (
             <button type="button" onClick={prev} className="btn-ghost btn-md">
               <ArrowLeft className="h-4 w-4" />
-              Retour
+              {t("form.objective.previous")}
             </button>
           )}
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={onCancel} className="btn-secondary btn-md">
-            Annuler
+            {t("common.cancel")}
           </button>
           {step < 3 ? (
             <button type="button" onClick={next} className="btn-primary btn-md">
-              Suivant
+              {t("form.objective.next")}
               <ArrowRight className="h-4 w-4" />
             </button>
           ) : (
             <button type="submit" className="btn-primary btn-md">
               <Check className="h-4 w-4" />
-              {isEdit ? "Mettre a jour" : "Creer l'objectif"}
+              {isEdit ? t("form.objective.updateObjective") : t("form.objective.createObjective")}
             </button>
           )}
         </div>

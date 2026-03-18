@@ -2,6 +2,7 @@
 
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { useI18n } from "@/lib/i18n";
 import type { KeyResult } from "@/types";
 import { Pencil, RefreshCw, Trash2 } from "lucide-react";
 
@@ -12,8 +13,8 @@ interface KeyResultCardProps {
   onDelete?: () => void;
 }
 
-function formatMetric(value: number, unit: string, metricType: KeyResult["metricType"]): string {
-  if (metricType === "boolean") return value >= 1 ? "Oui" : "Non";
+function formatMetric(value: number, unit: string, metricType: KeyResult["metricType"], yes: string, no: string): string {
+  if (metricType === "boolean") return value >= 1 ? yes : no;
   if (metricType === "percentage") return `${value}%`;
   if (metricType === "currency") return `${value.toLocaleString("fr-FR")} ${unit || "\u20AC"}`;
   return `${value.toLocaleString("fr-FR")}${unit ? ` ${unit}` : ""}`;
@@ -25,6 +26,7 @@ export default function KeyResultCard({
   onEdit,
   onDelete,
 }: KeyResultCardProps) {
+  const { t } = useI18n();
   const { title, currentValue, targetValue, unit, metricType, progress, confidence } = keyResult;
 
   return (
@@ -38,10 +40,10 @@ export default function KeyResultCard({
       {/* Metric */}
       <div className="mt-2 text-xs text-gray-500">
         <span className="font-semibold text-gray-800">
-          {formatMetric(currentValue, unit, metricType)}
+          {formatMetric(currentValue, unit, metricType, t("common.yes"), t("common.no"))}
         </span>
         {" "}
-        / {formatMetric(targetValue, unit, metricType)}
+        / {formatMetric(targetValue, unit, metricType, t("common.yes"), t("common.no"))}
       </div>
 
       {/* Progress */}
@@ -59,7 +61,7 @@ export default function KeyResultCard({
               className="btn-primary btn-sm"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              Mettre a jour
+              {t("kr.updateAction")}
             </button>
           )}
           <div className="flex-1" />
@@ -68,7 +70,7 @@ export default function KeyResultCard({
               type="button"
               onClick={onEdit}
               className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-gray-600"
-              aria-label="Modifier"
+              aria-label={t("common.edit")}
             >
               <Pencil className="h-4 w-4" />
             </button>
@@ -78,7 +80,7 @@ export default function KeyResultCard({
               type="button"
               onClick={onDelete}
               className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-red-500"
-              aria-label="Supprimer"
+              aria-label={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" />
             </button>

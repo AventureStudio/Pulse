@@ -1,6 +1,7 @@
 "use client";
 
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
+import { useI18n } from "@/lib/i18n";
 import type { CheckIn } from "@/types";
 import { motion } from "framer-motion";
 import { Clock, MessageSquare } from "lucide-react";
@@ -9,21 +10,25 @@ import { Clock, MessageSquare } from "lucide-react";
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function relativeDate(dateStr: string): string {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
+function useRelativeDate() {
+  const { t } = useI18n();
 
-  if (diffMin < 1) return "A l'instant";
-  if (diffMin < 60) return `Il y a ${diffMin} min`;
-  if (diffHours < 24) return `Il y a ${diffHours}h`;
-  if (diffDays === 1) return "Hier";
-  if (diffDays < 7) return `Il y a ${diffDays} jours`;
-  if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} sem.`;
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+  return (dateStr: string): string => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60_000);
+    const diffHours = Math.floor(diffMs / 3_600_000);
+    const diffDays = Math.floor(diffMs / 86_400_000);
+
+    if (diffMin < 1) return t("timeline.justNow");
+    if (diffMin < 60) return t("timeline.minutesAgo").replace("{n}", String(diffMin));
+    if (diffHours < 24) return t("timeline.hoursAgo").replace("{n}", String(diffHours));
+    if (diffDays === 1) return t("timeline.yesterday");
+    if (diffDays < 7) return t("timeline.daysAgo").replace("{n}", String(diffDays));
+    if (diffDays < 30) return t("timeline.weeksAgo").replace("{n}", String(Math.floor(diffDays / 7)));
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -31,14 +36,16 @@ function relativeDate(dateStr: string): string {
 /* ------------------------------------------------------------------ */
 
 function EmptyTimeline() {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
         <Clock className="h-6 w-6" />
       </div>
-      <p className="text-sm font-medium text-gray-600">Aucun check-in</p>
+      <p className="text-sm font-medium text-gray-600">{t("timeline.noCheckins")}</p>
       <p className="mt-1 text-xs text-gray-400">
-        Les mises a jour apparaitront ici au fil du temps.
+        {t("timeline.noCheckinsDesc")}
       </p>
     </div>
   );
@@ -58,6 +65,8 @@ const itemVariants = {
 };
 
 export default function CheckInTimeline({ checkIns }: CheckInTimelineProps) {
+  const relativeDate = useRelativeDate();
+
   if (checkIns.length === 0) return <EmptyTimeline />;
 
   const sorted = [...checkIns].sort(

@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
 import type { KeyResult, MetricType } from "@/types";
 import { type FormEvent, useCallback, useState } from "react";
 
@@ -26,13 +27,6 @@ interface KeyResultFormProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const metricTypeOptions: { value: MetricType; label: string }[] = [
-  { value: "number", label: "Nombre" },
-  { value: "percentage", label: "Pourcentage" },
-  { value: "currency", label: "Devise" },
-  { value: "boolean", label: "Oui / Non" },
-];
-
 function unitPlaceholder(metricType: MetricType): string {
   switch (metricType) {
     case "percentage":
@@ -40,9 +34,9 @@ function unitPlaceholder(metricType: MetricType): string {
     case "currency":
       return "\u20AC";
     case "number":
-      return "nombre";
+      return "";
     case "boolean":
-      return "oui/non";
+      return "";
   }
 }
 
@@ -55,6 +49,7 @@ export default function KeyResultForm({
   onSubmit,
   onCancel,
 }: KeyResultFormProps) {
+  const { t } = useI18n();
   const isEdit = Boolean(keyResult);
 
   const [form, setForm] = useState<KeyResultFormData>({
@@ -81,13 +76,20 @@ export default function KeyResultForm({
 
   const isBoolean = form.metricType === "boolean";
 
+  const metricTypeOptions: { value: MetricType; label: string }[] = [
+    { value: "number", label: t("form.kr.metricNumber") },
+    { value: "percentage", label: t("form.kr.metricPercentage") },
+    { value: "currency", label: t("form.kr.metricCurrency") },
+    { value: "boolean", label: t("form.kr.metricBoolean") },
+  ];
+
   const handleSubmit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
       const errs: typeof errors = {};
-      if (!form.title.trim()) errs.title = "Le titre est requis.";
+      if (!form.title.trim()) errs.title = t("form.kr.titleRequired");
       if (!isBoolean && form.targetValue === 0 && form.startValue === 0)
-        errs.targetValue = "La valeur cible est requise.";
+        errs.targetValue = t("form.kr.targetRequired");
       setErrors(errs);
       if (Object.keys(errs).length > 0) return;
 
@@ -96,7 +98,7 @@ export default function KeyResultForm({
         : form;
       onSubmit(data);
     },
-    [form, isBoolean, onSubmit],
+    [form, isBoolean, onSubmit, t],
   );
 
   return (
@@ -104,13 +106,13 @@ export default function KeyResultForm({
       {/* Title */}
       <div>
         <label htmlFor="kr-title" className="mb-1 block text-sm font-medium text-gray-700">
-          Titre <span className="text-red-500">*</span>
+          {t("form.kr.titleLabel")} <span className="text-red-500">*</span>
         </label>
         <input
           id="kr-title"
           type="text"
           className={`input ${errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
-          placeholder="Ex : Augmenter le NPS de 30 a 50"
+          placeholder={t("form.kr.titlePlaceholder")}
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
         />
@@ -120,12 +122,12 @@ export default function KeyResultForm({
       {/* Description */}
       <div>
         <label htmlFor="kr-desc" className="mb-1 block text-sm font-medium text-gray-700">
-          Description
+          {t("form.kr.descLabel")}
         </label>
         <textarea
           id="kr-desc"
           className="input min-h-[80px] resize-y"
-          placeholder="Comment ce resultat cle sera-t-il mesure ?"
+          placeholder={t("form.kr.descPlaceholder")}
           value={form.description}
           onChange={(e) => set("description", e.target.value)}
           rows={3}
@@ -135,7 +137,7 @@ export default function KeyResultForm({
       {/* Metric type */}
       <div>
         <label htmlFor="kr-metric" className="mb-1 block text-sm font-medium text-gray-700">
-          Type de metrique
+          {t("form.kr.metricType")}
         </label>
         <select
           id="kr-metric"
@@ -154,8 +156,7 @@ export default function KeyResultForm({
       {/* Boolean: simple toggle indication */}
       {isBoolean ? (
         <p className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">
-          Ce resultat cle sera mesure par Oui ou Non. La valeur de depart est
-          &quot;Non&quot; et la cible &quot;Oui&quot;.
+          {t("form.kr.booleanDesc")}
         </p>
       ) : (
         <>
@@ -163,7 +164,7 @@ export default function KeyResultForm({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="kr-start" className="mb-1 block text-sm font-medium text-gray-700">
-                Valeur de depart
+                {t("form.kr.startValue")}
               </label>
               <input
                 id="kr-start"
@@ -175,7 +176,7 @@ export default function KeyResultForm({
             </div>
             <div>
               <label htmlFor="kr-target" className="mb-1 block text-sm font-medium text-gray-700">
-                Valeur cible <span className="text-red-500">*</span>
+                {t("form.kr.targetValue")} <span className="text-red-500">*</span>
               </label>
               <input
                 id="kr-target"
@@ -193,7 +194,7 @@ export default function KeyResultForm({
           {/* Unit */}
           <div>
             <label htmlFor="kr-unit" className="mb-1 block text-sm font-medium text-gray-700">
-              Unite
+              {t("form.kr.unit")}
             </label>
             <input
               id="kr-unit"
@@ -210,10 +211,10 @@ export default function KeyResultForm({
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
         <button type="button" onClick={onCancel} className="btn-secondary btn-md">
-          Annuler
+          {t("common.cancel")}
         </button>
         <button type="submit" className="btn-primary btn-md">
-          {isEdit ? "Mettre a jour" : "Creer le resultat cle"}
+          {isEdit ? t("form.kr.updateKR") : t("form.kr.createKR")}
         </button>
       </div>
     </form>

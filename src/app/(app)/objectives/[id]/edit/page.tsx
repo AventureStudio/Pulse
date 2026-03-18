@@ -79,7 +79,7 @@ export default function EditObjectivePage() {
   if (!objective) {
     return (
       <div className="p-6 lg:p-8 max-w-3xl mx-auto">
-        <p className="text-gray-500">Objectif introuvable.</p>
+        <p className="text-gray-500">{t("form.objective.notFound")}</p>
         <Link href="/objectives" className="btn-secondary btn-md mt-4 inline-flex">
           <ArrowLeft className="w-4 h-4" /> {t("common.back")}
         </Link>

@@ -133,7 +133,7 @@ export default function DashboardPage() {
         >
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.label} {p.isActive ? "(actif)" : ""}
+              {p.label} {p.isActive ? `(${t("common.active").toLowerCase()})` : ""}
             </option>
           ))}
         </select>

@@ -77,6 +77,11 @@ export const translations = {
   "objectives.new.title": { fr: "Nouvel objectif", en: "New objective" },
   "objectives.new.subtitle": { fr: "Définissez un nouvel objectif pour votre organisation", en: "Define a new objective for your organization" },
 
+  // ── Objectives Filters ──
+  "objectives.allLevels": { fr: "Tous les niveaux", en: "All levels" },
+  "objectives.allStatuses": { fr: "Tous les statuts", en: "All statuses" },
+  "objectives.searchPlaceholder": { fr: "Rechercher un objectif...", en: "Search an objective..." },
+
   // ── Levels ──
   "level.company": { fr: "Entreprise", en: "Company" },
   "level.team": { fr: "Équipe", en: "Team" },
@@ -108,6 +113,9 @@ export const translations = {
   "kr.current": { fr: "Actuel", en: "Current" },
   "kr.history": { fr: "Historique des mises à jour", en: "Update history" },
   "kr.noHistory": { fr: "Aucune mise à jour pour le moment.", en: "No updates yet." },
+
+  // ── Key Result Card ──
+  "kr.updateAction": { fr: "Mettre à jour", en: "Update" },
 
   // ── Teams ──
   "teams.title": { fr: "Équipes", en: "Teams" },
@@ -156,6 +164,81 @@ export const translations = {
 
   // ── Key Result Detail extras ──
   "kr.responsible": { fr: "Responsable", en: "Owner" },
+
+  // ── Objective Form ──
+  "form.objective.titleLabel": { fr: "Titre de l'objectif", en: "Objective title" },
+  "form.objective.titlePlaceholder": { fr: "Ex : Augmenter la satisfaction client", en: "E.g.: Increase customer satisfaction" },
+  "form.objective.descLabel": { fr: "Description", en: "Description" },
+  "form.objective.descPlaceholder": { fr: "Décrivez l'objectif et son contexte...", en: "Describe the objective and its context..." },
+  "form.objective.levelLabel": { fr: "Niveau", en: "Level" },
+  "form.objective.periodLabel": { fr: "Période", en: "Period" },
+  "form.objective.selectPeriod": { fr: "Sélectionner une période", en: "Select a period" },
+  "form.objective.teamLabel": { fr: "Équipe", en: "Team" },
+  "form.objective.selectTeam": { fr: "Sélectionner une équipe", en: "Select a team" },
+  "form.objective.noTeam": { fr: "Aucune équipe", en: "No team" },
+  "form.objective.parentLabel": { fr: "Objectif parent (alignement)", en: "Parent objective (alignment)" },
+  "form.objective.selectParent": { fr: "Aucun (objectif racine)", en: "None (root objective)" },
+  "form.objective.statusLabel": { fr: "Statut", en: "Status" },
+  "form.objective.step": { fr: "Étape", en: "Step" },
+  "form.objective.of": { fr: "sur", en: "of" },
+  "form.objective.step1Title": { fr: "Identité de l'objectif", en: "Objective identity" },
+  "form.objective.step1Help": { fr: "Un bon objectif est ambitieux, qualitatif et inspirant.", en: "A good objective is ambitious, qualitative and inspiring." },
+  "form.objective.step2Title": { fr: "Contexte et alignement", en: "Context and alignment" },
+  "form.objective.step2Help": { fr: "Rattachez l'objectif à une période et une équipe pour assurer l'alignement.", en: "Link the objective to a period and team for alignment." },
+  "form.objective.step3Title": { fr: "Récapitulatif", en: "Summary" },
+  "form.objective.step3Help": { fr: "Vérifiez les informations avant de créer l'objectif.", en: "Review the information before creating the objective." },
+  "form.objective.next": { fr: "Suivant", en: "Next" },
+  "form.objective.previous": { fr: "Retour", en: "Back" },
+  "form.objective.createObjective": { fr: "Créer l'objectif", en: "Create objective" },
+  "form.objective.updateObjective": { fr: "Mettre à jour", en: "Update" },
+  "form.objective.notFound": { fr: "Objectif introuvable.", en: "Objective not found." },
+  "form.objective.helpLevel": { fr: "Entreprise : objectif stratégique global. Équipe : objectif de groupe. Individuel : contribution personnelle.", en: "Company: global strategic objective. Team: group objective. Individual: personal contribution." },
+  "form.objective.helpPeriod": { fr: "Sélectionnez la période (trimestre, semestre...) durant laquelle cet objectif sera poursuivi.", en: "Select the period (quarter, semester...) during which this objective will be pursued." },
+  "form.objective.helpTeam": { fr: "L'équipe responsable de cet objectif.", en: "The team responsible for this objective." },
+  "form.objective.helpParent": { fr: "Alignez cet objectif sur un objectif de niveau supérieur pour garantir la cohérence stratégique.", en: "Align this objective with a higher-level objective to ensure strategic coherence." },
+  "form.objective.titleRequired": { fr: "Le titre est requis.", en: "Title is required." },
+  "form.objective.periodRequired": { fr: "La période est requise.", en: "Period is required." },
+  "form.objective.alignedOn": { fr: "Aligné sur", en: "Aligned on" },
+  "form.objective.currentSuffix": { fr: "(en cours)", en: "(current)" },
+
+  // ── Key Result Form ──
+  "form.kr.titleLabel": { fr: "Titre du résultat clé", en: "Key result title" },
+  "form.kr.titlePlaceholder": { fr: "Ex : Augmenter le NPS de 30 à 50", en: "E.g.: Increase NPS from 30 to 50" },
+  "form.kr.descLabel": { fr: "Description", en: "Description" },
+  "form.kr.descPlaceholder": { fr: "Comment ce résultat clé sera-t-il mesuré ?", en: "How will this key result be measured?" },
+  "form.kr.metricType": { fr: "Type de métrique", en: "Metric type" },
+  "form.kr.metricNumber": { fr: "Nombre", en: "Number" },
+  "form.kr.metricPercentage": { fr: "Pourcentage", en: "Percentage" },
+  "form.kr.metricCurrency": { fr: "Devise", en: "Currency" },
+  "form.kr.metricBoolean": { fr: "Oui / Non", en: "Yes / No" },
+  "form.kr.startValue": { fr: "Valeur de départ", en: "Start value" },
+  "form.kr.targetValue": { fr: "Valeur cible", en: "Target value" },
+  "form.kr.unit": { fr: "Unité", en: "Unit" },
+  "form.kr.booleanDesc": { fr: "Ce résultat clé sera marqué comme atteint ou non atteint.", en: "This key result will be marked as achieved or not achieved." },
+  "form.kr.createKR": { fr: "Créer le résultat clé", en: "Create key result" },
+  "form.kr.updateKR": { fr: "Mettre à jour", en: "Update" },
+  "form.kr.titleRequired": { fr: "Le titre est requis.", en: "Title is required." },
+  "form.kr.targetRequired": { fr: "La valeur cible est requise.", en: "Target value is required." },
+
+  // ── Check-in Form ──
+  "form.checkin.currentValue": { fr: "Actuel", en: "Current" },
+  "form.checkin.targetValue": { fr: "Cible", en: "Target" },
+  "form.checkin.newValue": { fr: "Nouvelle valeur", en: "New value" },
+  "form.checkin.projectedProgress": { fr: "Progression après mise à jour", en: "Projected progress after update" },
+  "form.checkin.confidence": { fr: "Confiance", en: "Confidence" },
+  "form.checkin.note": { fr: "Note", en: "Note" },
+  "form.checkin.notePlaceholder": { fr: "Qu'est-ce qui a changé depuis le dernier check-in ?", en: "What changed since the last check-in?" },
+  "form.checkin.submit": { fr: "Enregistrer la mise à jour", en: "Save update" },
+
+  // ── Check-in Timeline ──
+  "timeline.justNow": { fr: "À l'instant", en: "Just now" },
+  "timeline.minutesAgo": { fr: "Il y a {n} min", en: "{n} min ago" },
+  "timeline.hoursAgo": { fr: "Il y a {n}h", en: "{n}h ago" },
+  "timeline.yesterday": { fr: "Hier", en: "Yesterday" },
+  "timeline.daysAgo": { fr: "Il y a {n} jours", en: "{n} days ago" },
+  "timeline.weeksAgo": { fr: "Il y a {n} sem.", en: "{n} weeks ago" },
+  "timeline.noCheckins": { fr: "Aucun check-in", en: "No check-ins" },
+  "timeline.noCheckinsDesc": { fr: "Les mises à jour apparaîtront ici au fil du temps.", en: "Updates will appear here over time." },
 
   // ── Language ──
   "lang.toggle": { fr: "EN", en: "FR" },
