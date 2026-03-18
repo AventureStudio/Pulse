@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -35,10 +35,19 @@ export default function AppLayout({
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, loading } = useAuth();
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Redirect to login if not authenticated (after loading is done)
+  useEffect(() => {
+    if (!loading && !user && !redirecting) {
+      setRedirecting(true);
+      router.replace("/login");
+    }
+  }, [loading, user, redirecting, router]);
 
   async function handleSignOut() {
     await signOut();
-    router.push("/login");
+    router.replace("/login");
   }
 
   // Loading state
@@ -46,35 +55,22 @@ export default function AppLayout({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <svg
-            className="animate-spin h-8 w-8 text-primary-600"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center">
+            <Activity className="w-6 h-6 text-white animate-pulse" />
+          </div>
           <span className="text-sm text-gray-500">Chargement...</span>
         </div>
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
+  // Redirecting to login
   if (!user) {
-    router.push("/login");
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <span className="text-sm text-gray-500">Redirection...</span>
+      </div>
+    );
   }
 
   return (
@@ -98,9 +94,7 @@ export default function AppLayout({
             className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"
           >
             <ChevronLeft
-              className={`w-4 h-4 transition-transform ${
-                !sidebarOpen ? "rotate-180" : ""
-              }`}
+              className={`w-4 h-4 transition-transform ${!sidebarOpen ? "rotate-180" : ""}`}
             />
           </button>
         </div>
@@ -121,11 +115,7 @@ export default function AppLayout({
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
-                <Icon
-                  className={`w-5 h-5 flex-shrink-0 ${
-                    isActive ? "text-primary-600" : ""
-                  }`}
-                />
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary-600" : ""}`} />
                 {sidebarOpen && <span>{item.label}</span>}
               </Link>
             );
@@ -135,29 +125,19 @@ export default function AppLayout({
         {/* User footer */}
         <div className="border-t border-gray-100 p-3">
           <div className="flex items-center gap-3 px-3 py-2.5">
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.fullName}
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-medium text-primary-700">
-                  {user.fullName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2)}
-                </span>
-              </div>
-            )}
+            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-primary-700">
+                {user.fullName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
+              </span>
+            </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user.fullName}
-                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">{user.fullName}</p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>
             )}
