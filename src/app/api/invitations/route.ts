@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           type: "magiclink",
           email: email.toLowerCase().trim(),
           options: {
-            redirectTo: `${origin}/callback?next=/dashboard`,
+            redirectTo: `${origin}/auth/confirm?next=/dashboard`,
           },
         })
       )

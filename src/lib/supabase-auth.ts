@@ -4,7 +4,7 @@ export async function signInWithMagicLink(email: string) {
   return supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/callback`,
+      emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/confirm`,
     },
   });
 }
