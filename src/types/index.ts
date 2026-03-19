@@ -13,7 +13,70 @@ export interface User {
   avatarUrl: string | null;
   role: UserRole;
   teamId: string | null;
+  activity: string | null;
+  roleDescription: string | null;
+  onboarded: boolean;
   createdAt: string;
+}
+
+// ── Invitation ──
+export type InvitationStatus = "pending" | "accepted" | "expired";
+
+export interface Invitation {
+  id: string;
+  email: string;
+  invitedBy: string;
+  teamId: string | null;
+  role: UserRole;
+  status: InvitationStatus;
+  createdAt: string;
+  acceptedAt: string | null;
+}
+
+// ── AI types ──
+export type AIAction = "suggest_objective" | "reformulate_objective" | "challenge_objective" | "suggest_key_results";
+
+export interface AIRequest {
+  action: AIAction;
+  context: AIContext;
+}
+
+export interface AIContext {
+  activity: string | null;
+  roleDescription: string | null;
+  currentTitle?: string;
+  currentDescription?: string;
+  objectiveLevel?: ObjectiveLevel;
+  existingObjectives?: { title: string; description: string }[];
+  parentObjective?: { title: string; description: string } | null;
+}
+
+export interface AISuggestion {
+  title: string;
+  description?: string;
+  reasoning?: string;
+}
+
+export interface AIKeyResultSuggestion {
+  title: string;
+  metricType: MetricType;
+  startValue: number;
+  targetValue: number;
+  unit: string;
+  reasoning?: string;
+}
+
+export interface AIChallenge {
+  point: string;
+  suggestion: string;
+}
+
+export interface AIResponse {
+  action: AIAction;
+  suggestions?: AISuggestion[];
+  keyResults?: AIKeyResultSuggestion[];
+  challenges?: AIChallenge[];
+  reformulation?: AISuggestion;
 }
 
 export interface Team {

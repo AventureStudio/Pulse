@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/supabase-api";
 import { toTeam } from "@/lib/utils/mappers";
 
 /* ── GET /api/teams ── */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("teams")
     .select("*, users(count)")
     .order("name", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/teams error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   const teams = (data ?? []).map((row) => {
@@ -30,6 +38,12 @@ export async function GET() {
 
 /* ── POST /api/teams ── */
 export async function POST(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const body = await request.json();
 
   const { data, error } = await supabaseAdmin
@@ -43,7 +57,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/teams error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json(toTeam(data as Record<string, unknown>), {

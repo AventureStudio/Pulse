@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/supabase-api";
 import { toObjective } from "@/lib/utils/mappers";
 
 /* ── GET /api/objectives ── */
 export async function GET(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const params = request.nextUrl.searchParams;
 
   const periodId = params.get("periodId");
@@ -30,7 +37,8 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/objectives error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   const objectives = (data ?? []).map((row) => {
@@ -45,11 +53,21 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  return NextResponse.json(objectives);
+  return NextResponse.json(objectives, {
+    headers: {
+      "Cache-Control": "private, max-age=0, s-maxage=10, stale-while-revalidate=30",
+    },
+  });
 }
 
 /* ── POST /api/objectives ── */
 export async function POST(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const body = await request.json();
 
   const { data, error } = await supabaseAdmin
@@ -68,7 +86,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/objectives error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json(toObjective(data as Record<string, unknown>), {

@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Plus, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Users, Plus, Loader2, ChevronRight } from "lucide-react";
 import type { Team } from "@/types";
 import Modal from "@/components/ui/Modal";
 import EmptyState from "@/components/ui/EmptyState";
 import { useI18n } from "@/lib/i18n";
+import { useStore } from "@/lib/store";
 
 export default function TeamsPage() {
   const { t } = useI18n();
+  const addToast = useStore((s) => s.addToast);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -52,9 +56,12 @@ export default function TeamsPage() {
         setFormName("");
         setFormDescription("");
         fetchTeams();
+        addToast({ type: "success", message: t("toast.teamCreated") });
+      } else {
+        addToast({ type: "error", message: t("toast.error") });
       }
     } catch {
-      // silently fail
+      addToast({ type: "error", message: t("toast.error") });
     } finally {
       setSubmitting(false);
     }
@@ -95,13 +102,13 @@ export default function TeamsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {teams.map((team) => (
-            <div key={team.id} className="card p-6 hover:shadow-md transition-shadow">
+            <Link key={team.id} href={`/teams/${team.id}`} className="card p-6 hover:shadow-md hover:border-primary-200 transition-all group block">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
                   <Users className="w-5 h-5 text-primary-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 truncate">
+                  <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-primary-700 transition-colors">
                     {team.name}
                   </h3>
                   {team.description && (
@@ -116,8 +123,9 @@ export default function TeamsPage() {
                     </span>
                   </div>
                 </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary-500 transition-colors mt-1" />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

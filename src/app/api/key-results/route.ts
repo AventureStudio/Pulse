@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/supabase-api";
 import { toKeyResult } from "@/lib/utils/mappers";
 
 /* ── POST /api/key-results ── */
 export async function POST(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const body = await request.json();
 
   const { data, error } = await supabaseAdmin
@@ -22,7 +29,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/key-results error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json(toKeyResult(data as Record<string, unknown>), {

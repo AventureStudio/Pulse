@@ -1,4 +1,4 @@
-import type { User, Team, Period, Objective, KeyResult, CheckIn } from "@/types";
+import type { User, Team, Period, Objective, KeyResult, CheckIn, Invitation } from "@/types";
 
 export function toUser(row: Record<string, unknown>): User {
   return {
@@ -8,7 +8,23 @@ export function toUser(row: Record<string, unknown>): User {
     avatarUrl: (row.avatar_url as string) || null,
     role: row.role as User["role"],
     teamId: (row.team_id as string) || null,
+    activity: (row.activity as string) || null,
+    roleDescription: (row.role_description as string) || null,
+    onboarded: (row.onboarded as boolean) ?? false,
     createdAt: row.created_at as string,
+  };
+}
+
+export function toInvitation(row: Record<string, unknown>): Invitation {
+  return {
+    id: row.id as string,
+    email: row.email as string,
+    invitedBy: row.invited_by as string,
+    teamId: (row.team_id as string) || null,
+    role: row.role as Invitation["role"],
+    status: row.status as Invitation["status"],
+    createdAt: row.created_at as string,
+    acceptedAt: (row.accepted_at as string) || null,
   };
 }
 

@@ -12,21 +12,34 @@ import {
   Users,
   User,
   GitBranch,
+  Sparkles,
 } from "lucide-react";
-import type { Objective, KeyResult, CheckIn } from "@/types";
+import type { Objective, KeyResult, CheckIn, AIAction, AIContext, AIKeyResultSuggestion } from "@/types";
+import dynamic from "next/dynamic";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import ProgressBar from "@/components/ui/ProgressBar";
-import Modal from "@/components/ui/Modal";
 import KeyResultCard from "@/components/key-results/KeyResultCard";
-import KeyResultForm, { type KeyResultFormData } from "@/components/key-results/KeyResultForm";
-import CheckInForm, { type CheckInFormData } from "@/components/check-ins/CheckInForm";
+import { type KeyResultFormData } from "@/components/key-results/KeyResultForm";
+import { type CheckInFormData } from "@/components/check-ins/CheckInForm";
+
+const Modal = dynamic(() => import("@/components/ui/Modal"), { ssr: false });
+const KeyResultForm = dynamic(() => import("@/components/key-results/KeyResultForm"), { ssr: false });
+const CheckInForm = dynamic(() => import("@/components/check-ins/CheckInForm"), { ssr: false });
+const AIAssistantPanel = dynamic(() => import("@/components/ai/AIAssistantPanel"), { ssr: false });
+import { useAIAssistant } from "@/lib/hooks/useAIAssistant";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { useStore } from "@/lib/store";
 
 export default function ObjectiveDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { t } = useI18n();
+  const { user: authUser } = useAuth();
+  const { ask, loading: aiLoading, error: aiError, response: aiResponse, reset: aiReset } = useAIAssistant();
+  const addToast = useStore((s) => s.addToast);
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const levelLabels: Record<string, { labelKey: "level.company" | "level.team" | "level.individual"; icon: typeof Building2 }> = {
     company: { labelKey: "level.company", icon: Building2 },
@@ -77,9 +90,12 @@ export default function ObjectiveDetailPage() {
       if (res.ok) {
         setKrModalOpen(false);
         fetchObjective();
+        addToast({ type: "success", message: t("toast.krCreated") });
+      } else {
+        addToast({ type: "error", message: t("toast.error") });
       }
     } catch {
-      // silently fail
+      addToast({ type: "error", message: t("toast.error") });
     } finally {
       setSubmitting(false);
     }
@@ -98,9 +114,12 @@ export default function ObjectiveDetailPage() {
         setCheckInModalOpen(false);
         setSelectedKr(null);
         fetchObjective();
+        addToast({ type: "success", message: t("toast.checkinSaved") });
+      } else {
+        addToast({ type: "error", message: t("toast.error") });
       }
     } catch {
-      // silently fail
+      addToast({ type: "error", message: t("toast.error") });
     } finally {
       setSubmitting(false);
     }
@@ -115,9 +134,10 @@ export default function ObjectiveDetailPage() {
       });
       if (res.ok) {
         fetchObjective();
+        addToast({ type: "success", message: t("toast.objectiveUpdated") });
       }
     } catch {
-      // silently fail
+      addToast({ type: "error", message: t("toast.error") });
     }
   }
 
@@ -127,18 +147,38 @@ export default function ObjectiveDetailPage() {
       const res = await fetch(`/api/key-results/${krId}`, { method: "DELETE" });
       if (res.ok) {
         fetchObjective();
+        addToast({ type: "success", message: t("toast.krDeleted") });
       }
     } catch {
-      // silently fail
+      addToast({ type: "error", message: t("toast.error") });
     }
   }
 
   if (loading) {
     return (
       <div className="p-6 lg:p-8 max-w-4xl mx-auto">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <div className="h-4 bg-gray-200 rounded w-32 mb-6 animate-pulse" />
+        <div className="card p-6 mb-6 animate-pulse">
+          <div className="flex gap-2 mb-3">
+            <div className="h-5 bg-gray-200 rounded w-20" />
+            <div className="h-5 bg-gray-200 rounded w-16" />
+          </div>
+          <div className="h-7 bg-gray-200 rounded w-3/4 mb-2" />
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+          <div className="h-3 bg-gray-200 rounded w-full mb-4" />
+          <div className="flex gap-4">
+            <div className="h-3 bg-gray-200 rounded w-24" />
+            <div className="h-3 bg-gray-200 rounded w-24" />
+          </div>
         </div>
+        <div className="h-5 bg-gray-200 rounded w-40 mb-4 animate-pulse" />
+        {[1, 2].map((i) => (
+          <div key={i} className="card p-5 mb-3 animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-3" />
+            <div className="h-2 bg-gray-200 rounded w-full mb-2" />
+            <div className="h-3 bg-gray-200 rounded w-1/4" />
+          </div>
+        ))}
       </div>
     );
   }
@@ -247,13 +287,62 @@ export default function ObjectiveDetailPage() {
           <h2 className="text-lg font-semibold text-gray-900">
             {t("objectives.detail.keyResults")} ({keyResults.length})
           </h2>
-          <button
-            className="btn-primary btn-md"
-            onClick={() => setKrModalOpen(true)}
-          >
-            <Plus className="w-4 h-4" /> {t("objectives.detail.addKR")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAIPanel(!showAIPanel);
+                if (!showAIPanel) {
+                  aiReset();
+                }
+              }}
+              className="btn-secondary btn-md"
+            >
+              <Sparkles className="w-4 h-4" /> {t("ai.suggestKR")}
+            </button>
+            <button
+              className="btn-primary btn-md"
+              onClick={() => setKrModalOpen(true)}
+            >
+              <Plus className="w-4 h-4" /> {t("objectives.detail.addKR")}
+            </button>
+          </div>
         </div>
+
+        {/* AI Panel for KR suggestions */}
+        {showAIPanel && objective && (
+          <div className="mb-4">
+            <AIAssistantPanel
+              context={{
+                activity: authUser?.activity || null,
+                roleDescription: authUser?.roleDescription || null,
+                currentTitle: objective.title,
+                currentDescription: objective.description,
+                objectiveLevel: objective.level,
+              }}
+              response={aiResponse}
+              loading={aiLoading}
+              error={aiError}
+              onAction={(action: AIAction) => {
+                aiReset();
+                ask(action, {
+                  activity: authUser?.activity || null,
+                  roleDescription: authUser?.roleDescription || null,
+                  currentTitle: objective.title,
+                  currentDescription: objective.description,
+                  objectiveLevel: objective.level,
+                });
+              }}
+              onApplySuggestion={() => {}}
+              onApplyKeyResult={(kr) => {
+                // Open the KR modal — the user can then fill in from the suggestion
+                setKrModalOpen(true);
+              }}
+              showKRButton
+              hasTitle={Boolean(objective.title)}
+            />
+          </div>
+        )}
 
         {keyResults.length === 0 ? (
           <div className="card p-8 text-center text-gray-500 text-sm">

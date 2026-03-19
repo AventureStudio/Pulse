@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Target, Plus, Search, Loader2 } from "lucide-react";
 import type { Objective, Period, ObjectiveLevel, ObjectiveStatus } from "@/types";
@@ -18,6 +18,14 @@ export default function ObjectivesPage() {
   const [levelFilter, setLevelFilter] = useState<ObjectiveLevel | "all">("all");
   const [statusFilter, setStatusFilter] = useState<ObjectiveStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+  }, []);
 
   // Fetch periods on mount
   useEffect(() => {
@@ -50,7 +58,7 @@ export default function ObjectivesPage() {
         const params = new URLSearchParams({ periodId: selectedPeriodId });
         if (levelFilter !== "all") params.set("level", levelFilter);
         if (statusFilter !== "all") params.set("status", statusFilter);
-        if (search.trim()) params.set("search", search.trim());
+        if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
 
         const res = await fetch(`/api/objectives?${params}`);
         if (res.ok) {
@@ -64,7 +72,7 @@ export default function ObjectivesPage() {
       }
     }
     fetchObjectives();
-  }, [selectedPeriodId, levelFilter, statusFilter, search]);
+  }, [selectedPeriodId, levelFilter, statusFilter, debouncedSearch]);
 
   const filteredObjectives = useMemo(() => objectives, [objectives]);
 
@@ -130,7 +138,7 @@ export default function ObjectivesPage() {
             placeholder={t("objectives.searchPlaceholder")}
             className="input pl-9 w-full"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
       </div>

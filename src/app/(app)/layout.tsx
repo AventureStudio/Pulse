@@ -40,12 +40,14 @@ export default function AppLayout({
   const { user, loading } = useAuth();
   const { t, locale, setLocale } = useI18n();
 
-  // Redirect to login if not authenticated (after loading is done)
+  // Redirect to login if not authenticated, or to onboarding if not onboarded
   useEffect(() => {
     if (!loading && !user) {
       window.location.href = "/login";
+    } else if (!loading && user && !user.onboarded && !pathname.startsWith("/onboarding")) {
+      router.push("/onboarding");
     }
-  }, [loading, user]);
+  }, [loading, user, pathname, router]);
 
   async function handleSignOut() {
     await signOut();
@@ -191,7 +193,7 @@ export default function AppLayout({
       </nav>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</main>
+      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</main>
     </div>
   );
 }

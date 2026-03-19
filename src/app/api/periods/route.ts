@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/supabase-api";
 import { toPeriod } from "@/lib/utils/mappers";
 
 /* ── GET /api/periods ── */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("periods")
     .select("*")
     .order("start_date", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET /api/periods error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   const periods = (data ?? []).map((row) =>
@@ -22,9 +30,14 @@ export async function GET() {
 
 /* ── POST /api/periods ── */
 export async function POST(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const body = await request.json();
 
-  // If the new period should be active, deactivate all existing periods first
   if (body.isActive) {
     const { error: deactivateError } = await supabaseAdmin
       .from("periods")
@@ -32,10 +45,8 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true);
 
     if (deactivateError) {
-      return NextResponse.json(
-        { error: deactivateError.message },
-        { status: 500 },
-      );
+      console.error("POST /api/periods deactivate error:", deactivateError.message);
+      return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
   }
 
@@ -51,7 +62,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("POST /api/periods error:", error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json(toPeriod(data as Record<string, unknown>), {
@@ -61,6 +73,12 @@ export async function POST(request: NextRequest) {
 
 /* ── PUT /api/periods ── */
 export async function PUT(request: NextRequest) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const body = await request.json();
 
   if (!body.id) {
@@ -70,7 +88,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  // If setting this period as active, deactivate all others first
   if (body.isActive) {
     const { error: deactivateError } = await supabaseAdmin
       .from("periods")
@@ -78,10 +95,8 @@ export async function PUT(request: NextRequest) {
       .eq("is_active", true);
 
     if (deactivateError) {
-      return NextResponse.json(
-        { error: deactivateError.message },
-        { status: 500 },
-      );
+      console.error("PUT /api/periods deactivate error:", deactivateError.message);
+      return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
   }
 
@@ -100,7 +115,8 @@ export async function PUT(request: NextRequest) {
 
   if (error) {
     const status = error.code === "PGRST116" ? 404 : 500;
-    return NextResponse.json({ error: error.message }, { status });
+    console.error("PUT /api/periods error:", error.message);
+    return NextResponse.json({ error: status === 404 ? "Non trouvé" : "Erreur serveur" }, { status });
   }
 
   return NextResponse.json(toPeriod(data as Record<string, unknown>));

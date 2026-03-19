@@ -4,6 +4,7 @@ import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { Objective } from "@/types";
 import { KeyRound, User } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface ObjectiveCardProps {
   objective: Objective;
@@ -12,20 +13,20 @@ interface ObjectiveCardProps {
 
 const levelConfig: Record<
   Objective["level"],
-  { label: string; bg: string; text: string }
+  { labelKey: "level.company" | "level.team" | "level.individual"; bg: string; text: string }
 > = {
   company: {
-    label: "Entreprise",
+    labelKey: "level.company",
     bg: "bg-blue-50",
     text: "text-blue-700",
   },
   team: {
-    label: "Equipe",
+    labelKey: "level.team",
     bg: "bg-purple-50",
     text: "text-purple-700",
   },
   individual: {
-    label: "Individuel",
+    labelKey: "level.individual",
     bg: "bg-green-50",
     text: "text-green-700",
   },
@@ -35,8 +36,9 @@ export default function ObjectiveCard({
   objective,
   onClick,
 }: ObjectiveCardProps) {
+  const { t } = useI18n();
   const level = levelConfig[objective.level];
-  const keyResultsCount = objective.keyResults?.length ?? 0;
+  const keyResultsCount = (objective as unknown as { keyResultsCount?: number }).keyResultsCount ?? objective.keyResults?.length ?? 0;
 
   return (
     <div
@@ -60,7 +62,7 @@ export default function ObjectiveCard({
         <span
           className={`badge ${level.bg} ${level.text}`}
         >
-          {level.label}
+          {t(level.labelKey)}
         </span>
         <ConfidenceBadge confidence={objective.confidence} size="sm" />
       </div>
@@ -80,8 +82,7 @@ export default function ObjectiveCard({
         {keyResultsCount > 0 && (
           <span className="inline-flex items-center gap-1">
             <KeyRound className="h-3.5 w-3.5" />
-            {keyResultsCount} resultat{keyResultsCount > 1 ? "s" : ""} cle
-            {keyResultsCount > 1 ? "s" : ""}
+            {keyResultsCount} {t("kr.title")}{keyResultsCount > 1 ? "s" : ""}
           </span>
         )}
         {objective.owner && (

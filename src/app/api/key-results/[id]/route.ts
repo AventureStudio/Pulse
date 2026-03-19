@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/supabase-api";
 import { toKeyResult, toCheckIn } from "@/lib/utils/mappers";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 /* ── GET /api/key-results/[id] ── */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: RouteContext,
 ) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const { id } = await context.params;
 
   const { data, error } = await supabaseAdmin
@@ -23,7 +30,8 @@ export async function GET(
 
   if (error) {
     const status = error.code === "PGRST116" ? 404 : 500;
-    return NextResponse.json({ error: error.message }, { status });
+    console.error(`GET /api/key-results/${id} error:`, error.message);
+    return NextResponse.json({ error: status === 404 ? "Non trouvé" : "Erreur serveur" }, { status });
   }
 
   const checkIns = Array.isArray(data.check_ins)
@@ -43,6 +51,12 @@ export async function PUT(
   request: NextRequest,
   context: RouteContext,
 ) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const { id } = await context.params;
   const body = await request.json();
 
@@ -68,7 +82,8 @@ export async function PUT(
 
   if (error) {
     const status = error.code === "PGRST116" ? 404 : 500;
-    return NextResponse.json({ error: error.message }, { status });
+    console.error(`PUT /api/key-results/${id} error:`, error.message);
+    return NextResponse.json({ error: status === 404 ? "Non trouvé" : "Erreur serveur" }, { status });
   }
 
   return NextResponse.json(toKeyResult(data as Record<string, unknown>));
@@ -76,9 +91,15 @@ export async function PUT(
 
 /* ── DELETE /api/key-results/[id] ── */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: RouteContext,
 ) {
+  try {
+    await requireAuth(request);
+  } catch (res) {
+    return res as NextResponse;
+  }
+
   const { id } = await context.params;
 
   const { error } = await supabaseAdmin
@@ -87,7 +108,8 @@ export async function DELETE(
     .eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(`DELETE /api/key-results/${id} error:`, error.message);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

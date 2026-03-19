@@ -19,6 +19,7 @@ import {
 import {
   type FormEvent,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -44,6 +45,8 @@ interface ObjectiveFormProps {
   parentObjectives: Objective[];
   onSubmit: (data: ObjectiveFormData) => void;
   onCancel: () => void;
+  suggestedValues?: { title?: string; description?: string } | null;
+  onFormChange?: (data: ObjectiveFormData) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -69,6 +72,8 @@ export default function ObjectiveForm({
   parentObjectives,
   onSubmit,
   onCancel,
+  suggestedValues,
+  onFormChange,
 }: ObjectiveFormProps) {
   const { t } = useI18n();
   const isEdit = Boolean(objective);
@@ -84,6 +89,22 @@ export default function ObjectiveForm({
     status: objective?.status ?? "draft",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObjectiveFormData, string>>>({});
+
+  /* ---- Apply suggested values ---- */
+  useEffect(() => {
+    if (suggestedValues) {
+      setForm((prev) => ({
+        ...prev,
+        ...(suggestedValues.title !== undefined && { title: suggestedValues.title }),
+        ...(suggestedValues.description !== undefined && { description: suggestedValues.description }),
+      }));
+    }
+  }, [suggestedValues]);
+
+  /* ---- Notify parent of form changes ---- */
+  useEffect(() => {
+    onFormChange?.(form);
+  }, [form, onFormChange]);
 
   /* ---- Translated help texts ---- */
   const helpTexts: Record<string, string> = useMemo(

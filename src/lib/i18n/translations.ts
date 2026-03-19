@@ -152,6 +152,28 @@ export const translations = {
   "settings.title": { fr: "Paramètres", en: "Settings" },
   "settings.subtitle": { fr: "Configurez votre profil et l'application", en: "Configure your profile and the application" },
   "settings.comingSoon": { fr: "Les paramètres seront disponibles prochainement.", en: "Settings will be available soon." },
+  "settings.nameLabel": { fr: "Nom complet", en: "Full name" },
+  "settings.saved": { fr: "Profil mis à jour avec succès.", en: "Profile updated successfully." },
+  "settings.saveError": { fr: "Erreur lors de la sauvegarde.", en: "Error saving profile." },
+
+  // ── Toast messages ──
+  "toast.objectiveCreated": { fr: "Objectif créé avec succès.", en: "Objective created successfully." },
+  "toast.objectiveUpdated": { fr: "Objectif mis à jour.", en: "Objective updated." },
+  "toast.objectiveDeleted": { fr: "Objectif supprimé.", en: "Objective deleted." },
+  "toast.krCreated": { fr: "Résultat clé ajouté.", en: "Key result added." },
+  "toast.krDeleted": { fr: "Résultat clé supprimé.", en: "Key result deleted." },
+  "toast.checkinSaved": { fr: "Check-in enregistré.", en: "Check-in saved." },
+  "toast.teamCreated": { fr: "Équipe créée.", en: "Team created." },
+  "toast.error": { fr: "Une erreur est survenue.", en: "An error occurred." },
+  "toast.invitesSent": { fr: "Invitations envoyées.", en: "Invitations sent." },
+
+  // ── Teams extras ──
+  "teams.viewDetail": { fr: "Voir l'équipe", en: "View team" },
+  "teams.memberCount": { fr: "membre(s)", en: "member(s)" },
+  "teams.objectives": { fr: "objectif(s)", en: "objective(s)" },
+  "teams.addMember": { fr: "Ajouter un membre", en: "Add member" },
+  "teams.removeMember": { fr: "Retirer", en: "Remove" },
+  "teams.noMembers": { fr: "Aucun membre dans cette équipe.", en: "No members in this team." },
 
   // ── Objective Detail extras ──
   "objectives.detail.notFound": { fr: "Objectif introuvable.", en: "Objective not found." },
@@ -242,6 +264,69 @@ export const translations = {
 
   // ── Language ──
   "lang.toggle": { fr: "EN", en: "FR" },
+
+  // ── Onboarding ──
+  "onboarding.title": { fr: "Bienvenue sur Pulse", en: "Welcome to Pulse" },
+  "onboarding.subtitle": { fr: "Configurons votre espace en quelques étapes", en: "Let's set up your workspace in a few steps" },
+  "onboarding.step": { fr: "Étape", en: "Step" },
+  "onboarding.of": { fr: "sur", en: "of" },
+  "onboarding.next": { fr: "Continuer", en: "Continue" },
+  "onboarding.previous": { fr: "Retour", en: "Back" },
+  "onboarding.finish": { fr: "Commencer", en: "Get started" },
+  "onboarding.skip": { fr: "Passer", en: "Skip" },
+
+  "onboarding.step1.title": { fr: "Parlez-nous de vous", en: "Tell us about yourself" },
+  "onboarding.step1.subtitle": { fr: "Ces informations nous aident à personnaliser vos OKRs", en: "This information helps us personalize your OKRs" },
+  "onboarding.step1.activityLabel": { fr: "Secteur d'activité", en: "Industry / Sector" },
+  "onboarding.step1.activityPlaceholder": { fr: "Ex : SaaS, E-commerce, Éducation, Santé...", en: "E.g.: SaaS, E-commerce, Education, Healthcare..." },
+  "onboarding.step1.roleLabel": { fr: "Votre rôle", en: "Your role" },
+  "onboarding.step1.roleCEO": { fr: "CEO / Fondateur", en: "CEO / Founder" },
+  "onboarding.step1.roleManager": { fr: "Manager", en: "Manager" },
+  "onboarding.step1.roleLead": { fr: "Team Lead", en: "Team Lead" },
+  "onboarding.step1.roleContributor": { fr: "Contributeur", en: "Contributor" },
+  "onboarding.step1.activityRequired": { fr: "Le secteur d'activité est requis.", en: "Industry is required." },
+  "onboarding.step1.roleRequired": { fr: "Veuillez sélectionner un rôle.", en: "Please select a role." },
+
+  "onboarding.step2.title": { fr: "Invitez votre équipe", en: "Invite your team" },
+  "onboarding.step2.subtitle": { fr: "Ajoutez des collaborateurs pour travailler ensemble sur vos OKRs", en: "Add collaborators to work together on your OKRs" },
+  "onboarding.step2.emailLabel": { fr: "Adresse email", en: "Email address" },
+  "onboarding.step2.emailPlaceholder": { fr: "collègue@entreprise.com", en: "colleague@company.com" },
+  "onboarding.step2.addEmail": { fr: "Ajouter", en: "Add" },
+  "onboarding.step2.sendInvites": { fr: "Envoyer les invitations", en: "Send invitations" },
+  "onboarding.step2.invitesSent": { fr: "Invitations envoyées !", en: "Invitations sent!" },
+  "onboarding.step2.noInvites": { fr: "Aucune invitation pour le moment", en: "No invitations yet" },
+  "onboarding.step2.invalidEmail": { fr: "Email invalide.", en: "Invalid email." },
+  "onboarding.step2.duplicateEmail": { fr: "Email déjà ajouté.", en: "Email already added." },
+  "onboarding.step2.invited": { fr: "invité(s)", en: "invited" },
+  "onboarding.step2.remove": { fr: "Retirer", en: "Remove" },
+
+  "onboarding.step3.title": { fr: "Tout est prêt !", en: "You're all set!" },
+  "onboarding.step3.subtitle": { fr: "Votre espace Pulse est configuré. Commencez par créer votre premier objectif.", en: "Your Pulse workspace is set up. Start by creating your first objective." },
+  "onboarding.step3.goToDashboard": { fr: "Aller au dashboard", en: "Go to dashboard" },
+
+  // ── AI Assistant ──
+  "ai.assistant": { fr: "Assistant IA", en: "AI Assistant" },
+  "ai.suggest": { fr: "Suggérer des objectifs", en: "Suggest objectives" },
+  "ai.reformulate": { fr: "Reformuler", en: "Reformulate" },
+  "ai.challenge": { fr: "Challenger", en: "Challenge" },
+  "ai.suggestKR": { fr: "Suggérer des résultats clés", en: "Suggest key results" },
+  "ai.apply": { fr: "Appliquer", en: "Apply" },
+  "ai.thinking": { fr: "Réflexion en cours...", en: "Thinking..." },
+  "ai.error": { fr: "Une erreur est survenue. Réessayez.", en: "An error occurred. Try again." },
+  "ai.noTitle": { fr: "Renseignez d'abord un titre pour obtenir des suggestions.", en: "Enter a title first to get suggestions." },
+  "ai.suggestionsTitle": { fr: "Suggestions", en: "Suggestions" },
+  "ai.challengesTitle": { fr: "Points à considérer", en: "Points to consider" },
+  "ai.reformulationTitle": { fr: "Reformulation proposée", en: "Proposed reformulation" },
+  "ai.krSuggestionsTitle": { fr: "Résultats clés suggérés", en: "Suggested key results" },
+  "ai.panelHint": { fr: "L'IA vous aide à formuler de meilleurs OKRs", en: "AI helps you write better OKRs" },
+  "ai.start": { fr: "Départ", en: "Start" },
+  "ai.target": { fr: "Cible", en: "Target" },
+
+  // ── Invitations ──
+  "invitations.title": { fr: "Invitations", en: "Invitations" },
+  "invitations.pending": { fr: "En attente", en: "Pending" },
+  "invitations.accepted": { fr: "Acceptée", en: "Accepted" },
+  "invitations.expired": { fr: "Expirée", en: "Expired" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

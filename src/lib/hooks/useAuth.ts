@@ -25,6 +25,9 @@ export function useAuth() {
         avatarUrl: data.avatar_url,
         role: data.role,
         teamId: data.team_id,
+        activity: data.activity || null,
+        roleDescription: data.role_description || null,
+        onboarded: data.onboarded ?? false,
         createdAt: data.created_at,
       };
     } catch {

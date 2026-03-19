@@ -84,6 +84,14 @@ if [[ -n "$DOMAIN" ]]; then
   echo "Adding domain: $DOMAIN"
   run_vercel domains add "$DOMAIN" --yes 2>/dev/null || true
 
+  # Alias the deployment to the custom domain
+  DEPLOY_HOST="${DEPLOY_URL#https://}"
+  DEPLOY_HOST="${DEPLOY_HOST%%/*}"
+  if [[ -n "$DEPLOY_HOST" ]]; then
+    echo "→ Aliasing $DEPLOY_HOST → $DOMAIN"
+    run_vercel alias "$DEPLOY_HOST" "$DOMAIN" 2>/dev/null || true
+  fi
+
   # Auto-configure DNS via GoDaddy
   SUBDOMAIN="${DOMAIN%%.*}"
   BASE_DOMAIN="${DOMAIN#*.}"
