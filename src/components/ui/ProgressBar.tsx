@@ -1,58 +1,65 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { memo } from "react";
 
 interface ProgressBarProps {
   progress: number;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
-  className?: string;
+  color?: "primary" | "success" | "warning" | "danger";
 }
 
-function getBarColor(progress: number): string {
-  if (progress >= 70) return "bg-emerald-500";
-  if (progress >= 40) return "bg-amber-500";
-  return "bg-red-500";
-}
-
-function getTrackHeight(size: "sm" | "md" | "lg"): string {
-  switch (size) {
-    case "sm":
-      return "h-1.5";
-    case "md":
-      return "h-2.5";
-    case "lg":
-      return "h-4";
-  }
-}
-
-export default function ProgressBar({
+const ProgressBar = memo(function ProgressBar({
   progress,
   size = "md",
   showLabel = false,
-  className = "",
+  color = "primary",
 }: ProgressBarProps) {
-  const clamped = Math.min(100, Math.max(0, progress));
-  const color = getBarColor(clamped);
-  const height = getTrackHeight(size);
+  const clampedProgress = Math.max(0, Math.min(100, progress));
+
+  const sizeClasses = {
+    sm: "h-1.5",
+    md: "h-2",
+    lg: "h-3",
+  };
+
+  const colorClasses = {
+    primary: "bg-primary-500",
+    success: "bg-success-500",
+    warning: "bg-warning-500",
+    danger: "bg-danger-500",
+  };
+
+  if (clampedProgress === 0) {
+    return (
+      <div className="space-y-1">
+        <div className={`skeleton ${sizeClasses[size]} rounded-full`} />
+        {showLabel && (
+          <div className="skeleton h-3 w-8 rounded" />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div
-        className={`relative w-full overflow-hidden rounded-full bg-gray-100 ${height}`}
-      >
-        <motion.div
-          className={`absolute inset-y-0 left-0 rounded-full ${color}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${clamped}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+    <div className="space-y-1">
+      <div className={`bg-gray-200 rounded-full ${sizeClasses[size]} overflow-hidden`}>
+        <div
+          className={`${colorClasses[color]} ${sizeClasses[size]} rounded-full transition-all duration-500 ease-out`}
+          style={{ width: `${clampedProgress}%` }}
+          role="progressbar"
+          aria-valuenow={clampedProgress}
+          aria-valuemin={0}
+          aria-valuemax={100}
         />
       </div>
       {showLabel && (
-        <span className="flex-shrink-0 text-xs font-semibold text-gray-600 tabular-nums">
-          {Math.round(clamped)}%
-        </span>
+        <p className="text-xs text-gray-500 font-medium">
+          {clampedProgress}%
+        </p>
       )}
     </div>
   );
-}
+});
+
+export default ProgressBar;
