@@ -21,6 +21,17 @@ function applySecurityHeaders(response: NextResponse) {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Skip middleware for static assets and special paths
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   // Use CENTRAL Supabase for auth validation
@@ -51,13 +62,6 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove this call
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
   // Public routes that don't require auth
   const isPublicRoute =
     pathname === "/" ||
@@ -65,30 +69,49 @@ export async function middleware(request: NextRequest) {
     pathname === "/callback" ||
     pathname.startsWith("/auth/confirm") ||
     pathname.startsWith("/auth/callback") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
     pathname === "/api/auth/setup";
 
-  // If no user and trying to access protected route, redirect to login
-  if (!user && !isPublicRoute) {
-    // For API routes, return 401 instead of redirect
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
-
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  // Skip auth check for public routes to prevent unnecessary redirects
+  if (isPublicRoute) {
+    applySecurityHeaders(supabaseResponse);
+    return supabaseResponse;
   }
 
-  // If user is logged in and trying to access login page, redirect to dashboard
-  if (user && (pathname === "/login" || pathname === "/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  try {
+    // Refresh session — IMPORTANT: do not remove this call
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // If no user and trying to access protected route, redirect to login
+    if (!user) {
+      // For API routes, return 401 instead of redirect
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Non authentifié" },
+          { status: 401 }
+        );
+      }
+
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      const redirectResponse = NextResponse.redirect(url);
+      applySecurityHeaders(redirectResponse);
+      return redirectResponse;
+    }
+
+    // If user is logged in and trying to access login page, redirect to dashboard
+    // Only redirect if explicitly on /login to avoid redirect loops
+    if (user && pathname === "/login") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      const redirectResponse = NextResponse.redirect(url);
+      applySecurityHeaders(redirectResponse);
+      return redirectResponse;
+    }
+  } catch (error) {
+    console.error("Middleware auth error:", error);
+    // On error, allow request to continue to prevent blocking
   }
 
   applySecurityHeaders(supabaseResponse);
