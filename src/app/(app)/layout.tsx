@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/lib/supabase-auth";
 import { useI18n } from "@/lib/i18n";
+import BackButton from "@/components/ui/BackButton";
 import type { TranslationKey } from "@/lib/i18n";
 
 const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
@@ -40,18 +41,22 @@ export default function AppLayout({
   const { user, loading } = useAuth();
   const { t, locale, setLocale } = useI18n();
 
+  // Determine if we should show the back button
+  const shouldShowBackButton = !["/dashboard", "/objectives", "/alignment", "/teams", "/periods", "/settings"].includes(pathname);
+
   // Redirect to login if not authenticated, or to onboarding if not onboarded
   useEffect(() => {
     if (!loading && !user) {
-      window.location.href = "/login";
+      // Use replace to avoid adding to history stack
+      window.location.replace("/login");
     } else if (!loading && user && !user.onboarded && !pathname.startsWith("/onboarding")) {
-      router.push("/onboarding");
+      router.replace("/onboarding");
     }
   }, [loading, user, pathname, router]);
 
   async function handleSignOut() {
     await signOut();
-    window.location.href = "/login";
+    window.location.replace("/login");
   }
 
   function toggleLocale() {
@@ -193,7 +198,15 @@ export default function AppLayout({
       </nav>
 
       {/* Main content */}
-      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</main>
+      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">
+        {/* Back button for sub-pages */}
+        {shouldShowBackButton && (
+          <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 lg:px-8 py-3">
+            <BackButton />
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

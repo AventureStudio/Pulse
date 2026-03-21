@@ -81,14 +81,21 @@ export async function middleware(request: NextRequest) {
 
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    // Use rewrite instead of redirect to preserve relative paths in navigation history
+    const response = NextResponse.redirect(url);
+    // Add header to indicate this was a auth redirect
+    response.headers.set('x-middleware-redirect', 'auth');
+    return response;
   }
 
   // If user is logged in and trying to access login page, redirect to dashboard
   if (user && (pathname === "/login" || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    // Add header to indicate this was a auth redirect
+    response.headers.set('x-middleware-redirect', 'auth');
+    return response;
   }
 
   applySecurityHeaders(supabaseResponse);
