@@ -2,6 +2,7 @@
 
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import ProgressBar from "@/components/ui/ProgressBar";
+import OptimizedImage from "@/components/ui/OptimizedImage";
 import type { Objective } from "@/types";
 import { KeyRound, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -86,10 +87,21 @@ export default function ObjectiveCard({
           </span>
         )}
         {objective.owner && (
-          <span className="inline-flex items-center gap-1">
-            <User className="h-3.5 w-3.5" />
-            {objective.owner.fullName}
-          </span>
+          <div className="inline-flex items-center gap-1">
+            {objective.owner.avatarUrl ? (
+              <OptimizedImage
+                src={objective.owner.avatarUrl}
+                alt={objective.owner.fullName}
+                width={14}
+                height={14}
+                className="rounded-full"
+                sizes="14px"
+              />
+            ) : (
+              <User className="h-3.5 w-3.5" />
+            )}
+            <span>{objective.owner.fullName}</span>
+          </div>
         )}
       </div>
     </div>
