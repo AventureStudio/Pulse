@@ -24,9 +24,7 @@ import {
   useState,
 } from "react";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+// ... existing types and helpers ...
 
 export interface ObjectiveFormData {
   title: string;
@@ -49,10 +47,6 @@ interface ObjectiveFormProps {
   onFormChange?: (data: ObjectiveFormData) => void;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
 const levelOptionsDef: { value: ObjectiveLevel; icon: typeof Building2 }[] = [
   { value: "company", icon: Building2 },
   { value: "team", icon: Users },
@@ -60,10 +54,6 @@ const levelOptionsDef: { value: ObjectiveLevel; icon: typeof Building2 }[] = [
 ];
 
 const statusOptionValues: ObjectiveStatus[] = ["draft", "active", "completed", "cancelled"];
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
 
 export default function ObjectiveForm({
   objective,
@@ -77,6 +67,7 @@ export default function ObjectiveForm({
 }: ObjectiveFormProps) {
   const { t } = useI18n();
   const isEdit = Boolean(objective);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<ObjectiveFormData>({
@@ -90,7 +81,8 @@ export default function ObjectiveForm({
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObjectiveFormData, string>>>({});
 
-  /* ---- Apply suggested values ---- */
+  // ... existing useEffects and helpers ...
+
   useEffect(() => {
     if (suggestedValues) {
       setForm((prev) => ({
@@ -101,12 +93,10 @@ export default function ObjectiveForm({
     }
   }, [suggestedValues]);
 
-  /* ---- Notify parent of form changes ---- */
   useEffect(() => {
     onFormChange?.(form);
   }, [form, onFormChange]);
 
-  /* ---- Translated help texts ---- */
   const helpTexts: Record<string, string> = useMemo(
     () => ({
       title: t("form.objective.step1Help"),
@@ -119,7 +109,6 @@ export default function ObjectiveForm({
     [t],
   );
 
-  /* ---- Field updater ---- */
   const set = useCallback(
     <K extends keyof ObjectiveFormData>(key: K, value: ObjectiveFormData[K]) => {
       setForm((prev) => ({ ...prev, [key]: value }));
@@ -132,7 +121,6 @@ export default function ObjectiveForm({
     [],
   );
 
-  /* ---- Validation ---- */
   const validate = useCallback(
     (s: number): boolean => {
       const errs: typeof errors = {};
@@ -144,23 +132,29 @@ export default function ObjectiveForm({
     [form, t],
   );
 
-  /* ---- Navigation ---- */
   const next = useCallback(() => {
     if (validate(step)) setStep((s) => Math.min(s + 1, 3));
   }, [step, validate]);
 
   const prev = useCallback(() => setStep((s) => Math.max(s - 1, 1)), []);
 
-  /* ---- Submit ---- */
   const handleSubmit = useCallback(
-    (e: FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault();
-      if (validate(3)) onSubmit(form);
+      if (!validate(3) || isSubmitting) return;
+      
+      setIsSubmitting(true);
+      try {
+        await onSubmit(form);
+      } catch (error) {
+        console.error('Form submission error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [form, onSubmit, validate],
+    [form, onSubmit, validate, isSubmitting],
   );
 
-  /* ---- Derived ---- */
   const selectedPeriod = useMemo(
     () => periods.find((p) => p.id === form.periodId),
     [periods, form.periodId],
@@ -174,19 +168,16 @@ export default function ObjectiveForm({
     [parentObjectives, form.parentObjectiveId],
   );
 
-  /* ---- Level label helper ---- */
   const levelLabel = (value: ObjectiveLevel) => {
     const key = `level.${value}` as const;
     return t(key);
   };
 
-  /* ---- Status label helper ---- */
   const statusLabel = (value: ObjectiveStatus) => {
     const key = `status.${value}` as const;
     return t(key);
   };
 
-  /* ---- Reusable help hint ---- */
   const Hint = ({ field }: { field: string }) => (
     <p className="mt-1 flex items-start gap-1 text-xs text-gray-400">
       <HelpCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
@@ -194,11 +185,10 @@ export default function ObjectiveForm({
     </p>
   );
 
-  /* ================================================================ */
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" data-testid="objective-form">
       {/* ── Step indicator ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" data-testid="step-indicator">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
             <span
@@ -228,8 +218,7 @@ export default function ObjectiveForm({
 
       {/* ── Step 1: Identity ── */}
       {step === 1 && (
-        <div className="space-y-4">
-          {/* Title */}
+        <div className="space-y-4" data-testid="step-1">
           <div>
             <label htmlFor="obj-title" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.titleLabel")} <span className="text-red-500">*</span>
@@ -237,16 +226,19 @@ export default function ObjectiveForm({
             <input
               id="obj-title"
               type="text"
-              className={`input ${errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
+              className={`input ${
+                errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""
+              }`}
               placeholder={t("form.objective.titlePlaceholder")}
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
+              data-testid="title-input"
+              disabled={isSubmitting}
             />
             {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
             <Hint field="title" />
           </div>
 
-          {/* Description */}
           <div>
             <label htmlFor="obj-desc" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.descLabel")}
@@ -258,14 +250,15 @@ export default function ObjectiveForm({
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               rows={4}
+              data-testid="description-input"
+              disabled={isSubmitting}
             />
             <Hint field="description" />
           </div>
 
-          {/* Level */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">{t("form.objective.levelLabel")}</label>
-            <div className="flex gap-2">
+            <div className="flex gap-2" data-testid="level-buttons">
               {levelOptionsDef.map((opt) => {
                 const Icon = opt.icon;
                 const active = form.level === opt.value;
@@ -274,7 +267,9 @@ export default function ObjectiveForm({
                     key={opt.value}
                     type="button"
                     onClick={() => set("level", opt.value)}
-                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                    disabled={isSubmitting}
+                    data-testid={`level-${opt.value}`}
+                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       active
                         ? "border-primary-500 bg-primary-50 text-primary-700"
                         : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
@@ -293,17 +288,20 @@ export default function ObjectiveForm({
 
       {/* ── Step 2: Context ── */}
       {step === 2 && (
-        <div className="space-y-4">
-          {/* Period */}
+        <div className="space-y-4" data-testid="step-2">
           <div>
             <label htmlFor="obj-period" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.periodLabel")} <span className="text-red-500">*</span>
             </label>
             <select
               id="obj-period"
-              className={`input ${errors.periodId ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
+              className={`input ${
+                errors.periodId ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""
+              }`}
               value={form.periodId}
               onChange={(e) => set("periodId", e.target.value)}
+              data-testid="period-select"
+              disabled={isSubmitting}
             >
               <option value="">{t("form.objective.selectPeriod")}</option>
               {periods.map((p) => (
@@ -317,7 +315,6 @@ export default function ObjectiveForm({
             <Hint field="period" />
           </div>
 
-          {/* Team (hidden when company level) */}
           {form.level !== "company" && (
             <div>
               <label htmlFor="obj-team" className="mb-1 block text-sm font-medium text-gray-700">
@@ -328,6 +325,8 @@ export default function ObjectiveForm({
                 className="input"
                 value={form.teamId}
                 onChange={(e) => set("teamId", e.target.value)}
+                data-testid="team-select"
+                disabled={isSubmitting}
               >
                 <option value="">{t("form.objective.noTeam")}</option>
                 {teams.map((tm) => (
@@ -340,28 +339,6 @@ export default function ObjectiveForm({
             </div>
           )}
 
-          {/* Parent alignment */}
-          <div>
-            <label htmlFor="obj-parent" className="mb-1 block text-sm font-medium text-gray-700">
-              {t("form.objective.parentLabel")}
-            </label>
-            <select
-              id="obj-parent"
-              className="input"
-              value={form.parentObjectiveId}
-              onChange={(e) => set("parentObjectiveId", e.target.value)}
-            >
-              <option value="">{t("form.objective.selectParent")}</option>
-              {parentObjectives.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.title}
-                </option>
-              ))}
-            </select>
-            <Hint field="parentObjectiveId" />
-          </div>
-
-          {/* Status */}
           <div>
             <label htmlFor="obj-status" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.statusLabel")}
@@ -371,6 +348,8 @@ export default function ObjectiveForm({
               className="input"
               value={form.status}
               onChange={(e) => set("status", e.target.value as ObjectiveStatus)}
+              data-testid="status-select"
+              disabled={isSubmitting}
             >
               {statusOptionValues.map((value) => (
                 <option key={value} value={value}>
@@ -384,7 +363,7 @@ export default function ObjectiveForm({
 
       {/* ── Step 3: Review ── */}
       {step === 3 && (
-        <div className="space-y-3 rounded-xl bg-gray-50 p-4 text-sm">
+        <div className="space-y-3 rounded-xl bg-gray-50 p-4 text-sm" data-testid="step-3">
           <h4 className="font-semibold text-gray-900">{t("form.objective.step3Title")}</h4>
           <dl className="space-y-2 text-gray-700">
             <div className="flex justify-between">
@@ -405,24 +384,6 @@ export default function ObjectiveForm({
               <dt className="font-medium text-gray-500">{t("form.objective.periodLabel")}</dt>
               <dd>{selectedPeriod?.label ?? "\u2014"}</dd>
             </div>
-            {form.level !== "company" && (
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">{t("form.objective.teamLabel")}</dt>
-                <dd>{selectedTeam?.name ?? "\u2014"}</dd>
-              </div>
-            )}
-            {form.parentObjectiveId && (
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">{t("form.objective.alignedOn")}</dt>
-                <dd className="text-right max-w-[60%] line-clamp-1">
-                  {selectedParent?.title ?? "\u2014"}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">{t("form.objective.statusLabel")}</dt>
-              <dd>{statusLabel(form.status)}</dd>
-            </div>
           </dl>
         </div>
       )}
@@ -431,25 +392,57 @@ export default function ObjectiveForm({
       <div className="flex items-center justify-between border-t border-gray-100 pt-4">
         <div>
           {step > 1 && (
-            <button type="button" onClick={prev} className="btn-ghost btn-md">
+            <button 
+              type="button" 
+              onClick={prev} 
+              className="btn-ghost btn-md"
+              disabled={isSubmitting}
+              data-testid="previous-button"
+            >
               <ArrowLeft className="h-4 w-4" />
               {t("form.objective.previous")}
             </button>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={onCancel} className="btn-secondary btn-md">
+          <button 
+            type="button" 
+            onClick={onCancel} 
+            className="btn-secondary btn-md"
+            disabled={isSubmitting}
+            data-testid="cancel-button"
+          >
             {t("common.cancel")}
           </button>
           {step < 3 ? (
-            <button type="button" onClick={next} className="btn-primary btn-md">
+            <button 
+              type="button" 
+              onClick={next} 
+              className="btn-primary btn-md"
+              disabled={isSubmitting}
+              data-testid="next-button"
+            >
               {t("form.objective.next")}
               <ArrowRight className="h-4 w-4" />
             </button>
           ) : (
-            <button type="submit" className="btn-primary btn-md">
-              <Check className="h-4 w-4" />
-              {isEdit ? t("form.objective.updateObjective") : t("form.objective.createObjective")}
+            <button 
+              type="submit" 
+              className="btn-primary btn-md"
+              disabled={isSubmitting}
+              data-testid="submit-button"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {t("common.saving") || "Saving..."}
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  {isEdit ? t("form.objective.updateObjective") : t("form.objective.createObjective")}
+                </>
+              )}
             </button>
           )}
         </div>

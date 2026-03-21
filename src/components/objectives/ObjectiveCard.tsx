@@ -40,53 +40,71 @@ export default function ObjectiveCard({
   const level = levelConfig[objective.level];
   const keyResultsCount = (objective as unknown as { keyResultsCount?: number }).keyResultsCount ?? objective.keyResults?.length ?? 0;
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onClick && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <div
-      className="card-interactive p-5"
-      onClick={onClick}
-      role={onClick ? "button" : undefined}
+      className="card-interactive p-5 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary-200"
+      onClick={handleClick}
+      role={onClick ? "button" : "article"}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
+      onKeyDown={handleKeyDown}
+      data-testid="objective-card"
+      aria-label={`Objective: ${objective.title}`}
     >
       {/* Header: level badge + confidence */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 mb-3">
         <span
           className={`badge ${level.bg} ${level.text}`}
+          data-testid="level-badge"
         >
           {t(level.labelKey)}
         </span>
-        <ConfidenceBadge confidence={objective.confidence} size="sm" />
+        <div data-testid="confidence-badge">
+          <ConfidenceBadge confidence={objective.confidence} size="sm" />
+        </div>
       </div>
 
       {/* Title */}
-      <h3 className="mt-3 text-sm font-semibold text-gray-900 line-clamp-2">
+      <h3 
+        className="text-sm font-semibold text-gray-900 line-clamp-2 mb-3"
+        data-testid="objective-title"
+      >
         {objective.title}
       </h3>
 
       {/* Progress */}
-      <div className="mt-3">
+      <div className="mb-3" data-testid="progress-bar">
         <ProgressBar progress={objective.progress} size="sm" showLabel />
       </div>
 
       {/* Footer: meta */}
-      <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-500">
         {keyResultsCount > 0 && (
-          <span className="inline-flex items-center gap-1">
+          <span 
+            className="inline-flex items-center gap-1"
+            data-testid="key-results-count"
+          >
             <KeyRound className="h-3.5 w-3.5" />
             {keyResultsCount} {t("kr.title")}{keyResultsCount > 1 ? "s" : ""}
           </span>
         )}
         {objective.owner && (
-          <span className="inline-flex items-center gap-1">
+          <span 
+            className="inline-flex items-center gap-1"
+            data-testid="objective-owner"
+          >
             <User className="h-3.5 w-3.5" />
             {objective.owner.fullName}
           </span>

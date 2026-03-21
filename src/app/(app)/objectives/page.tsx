@@ -13,6 +13,7 @@ export default function ObjectivesPage() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<ObjectiveLevel | "all">("all");
@@ -39,8 +40,9 @@ export default function ObjectivesPage() {
           if (active) setSelectedPeriodId(active.id);
           else if (data.length > 0) setSelectedPeriodId(data[0].id);
         }
-      } catch {
-        // silently fail
+      } catch (err) {
+        console.error("Failed to fetch periods:", err);
+        setError("Failed to load periods");
       }
     }
     fetchPeriods();
@@ -54,6 +56,7 @@ export default function ObjectivesPage() {
     }
     async function fetchObjectives() {
       setLoading(true);
+      setError(null);
       try {
         const params = new URLSearchParams({ periodId: selectedPeriodId });
         if (levelFilter !== "all") params.set("level", levelFilter);
@@ -64,9 +67,13 @@ export default function ObjectivesPage() {
         if (res.ok) {
           const data: Objective[] = await res.json();
           setObjectives(data);
+        } else {
+          throw new Error(`HTTP ${res.status}`);
         }
-      } catch {
-        // silently fail
+      } catch (err) {
+        console.error("Failed to fetch objectives:", err);
+        setError("Failed to load objectives");
+        setObjectives([]);
       } finally {
         setLoading(false);
       }
@@ -75,6 +82,24 @@ export default function ObjectivesPage() {
   }, [selectedPeriodId, levelFilter, statusFilter, debouncedSearch]);
 
   const filteredObjectives = useMemo(() => objectives, [objectives]);
+
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="card p-6 text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="btn-primary btn-md"
+            type="button"
+            data-testid="reload-button"
+          >
+            {t("common.retry") || "Retry"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -86,7 +111,11 @@ export default function ObjectivesPage() {
             {t("objectives.subtitle")}
           </p>
         </div>
-        <Link href="/objectives/new" className="btn-primary btn-md">
+        <Link 
+          href="/objectives/new" 
+          className="btn-primary btn-md"
+          data-testid="new-objective-button"
+        >
           <Plus className="w-4 h-4" /> {t("objectives.new")}
         </Link>
       </div>
@@ -97,6 +126,8 @@ export default function ObjectivesPage() {
           className="input"
           value={selectedPeriodId}
           onChange={(e) => setSelectedPeriodId(e.target.value)}
+          data-testid="period-select"
+          disabled={loading}
         >
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
@@ -110,6 +141,8 @@ export default function ObjectivesPage() {
           className="input"
           value={levelFilter}
           onChange={(e) => setLevelFilter(e.target.value as ObjectiveLevel | "all")}
+          data-testid="level-filter"
+          disabled={loading}
         >
           <option value="all">{t("objectives.allLevels")}</option>
           <option value="company">{t("level.company")}</option>
@@ -122,6 +155,8 @@ export default function ObjectivesPage() {
           className="input"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ObjectiveStatus | "all")}
+          data-testid="status-filter"
+          disabled={loading}
         >
           <option value="all">{t("objectives.allStatuses")}</option>
           <option value="draft">{t("status.draft")}</option>
@@ -139,13 +174,15 @@ export default function ObjectivesPage() {
             className="input pl-9 w-full"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
+            data-testid="search-input"
+            disabled={loading}
           />
         </div>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="loading-skeleton">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="card p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-4" />
@@ -156,18 +193,22 @@ export default function ObjectivesPage() {
           ))}
         </div>
       ) : filteredObjectives.length === 0 ? (
-        <EmptyState
-          icon={<Target className="w-7 h-7" />}
-          title={t("objectives.emptyTitle")}
-          description={t("objectives.emptyDesc")}
-          action={{ label: t("objectives.new"), href: "/objectives/new" }}
-        />
+        <div data-testid="empty-state">
+          <EmptyState
+            icon={<Target className="w-7 h-7" />}
+            title={t("objectives.emptyTitle")}
+            description={t("objectives.emptyDesc")}
+            action={{ label: t("objectives.new"), href: "/objectives/new" }}
+          />
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="objectives-grid">
           {filteredObjectives.map((obj) => (
-            <Link key={obj.id} href={`/objectives/${obj.id}`}>
-              <ObjectiveCard objective={obj} />
-            </Link>
+            <div key={obj.id} data-testid={`objective-${obj.id}`}>
+              <Link href={`/objectives/${obj.id}`}>
+                <ObjectiveCard objective={obj} />
+              </Link>
+            </div>
           ))}
         </div>
       )}
