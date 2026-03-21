@@ -7,19 +7,24 @@ import type { Objective, Period, ObjectiveLevel, ObjectiveStatus } from "@/types
 import ObjectiveCard from "@/components/objectives/ObjectiveCard";
 import EmptyState from "@/components/ui/EmptyState";
 import { useI18n } from "@/lib/i18n";
+import { useObjectives } from "@/lib/hooks/useObjectives";
 
 export default function ObjectivesPage() {
   const { t } = useI18n();
-  const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [loading, setLoading] = useState(true);
-
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<ObjectiveLevel | "all">("all");
   const [statusFilter, setStatusFilter] = useState<ObjectiveStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { objectives, loading } = useObjectives({
+    periodId: selectedPeriodId,
+    level: levelFilter === "all" ? undefined : levelFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    search: debouncedSearch.trim() || undefined
+  });
 
   const handleSearch = useCallback((value: string) => {
     setSearch(value);
@@ -46,34 +51,6 @@ export default function ObjectivesPage() {
     fetchPeriods();
   }, []);
 
-  // Fetch objectives when period or filters change
-  useEffect(() => {
-    if (!selectedPeriodId) {
-      setLoading(false);
-      return;
-    }
-    async function fetchObjectives() {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ periodId: selectedPeriodId });
-        if (levelFilter !== "all") params.set("level", levelFilter);
-        if (statusFilter !== "all") params.set("status", statusFilter);
-        if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
-
-        const res = await fetch(`/api/objectives?${params}`);
-        if (res.ok) {
-          const data: Objective[] = await res.json();
-          setObjectives(data);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchObjectives();
-  }, [selectedPeriodId, levelFilter, statusFilter, debouncedSearch]);
-
   const filteredObjectives = useMemo(() => objectives, [objectives]);
 
   return (
@@ -86,7 +63,11 @@ export default function ObjectivesPage() {
             {t("objectives.subtitle")}
           </p>
         </div>
-        <Link href="/objectives/new" className="btn-primary btn-md">
+        <Link 
+          href="/objectives/new" 
+          className="btn-primary btn-md"
+          data-testid="create-objective-button"
+        >
           <Plus className="w-4 h-4" /> {t("objectives.new")}
         </Link>
       </div>
@@ -97,6 +78,7 @@ export default function ObjectivesPage() {
           className="input"
           value={selectedPeriodId}
           onChange={(e) => setSelectedPeriodId(e.target.value)}
+          data-testid="period-selector"
         >
           {periods.map((p) => (
             <option key={p.id} value={p.id}>
@@ -110,6 +92,7 @@ export default function ObjectivesPage() {
           className="input"
           value={levelFilter}
           onChange={(e) => setLevelFilter(e.target.value as ObjectiveLevel | "all")}
+          data-testid="level-filter"
         >
           <option value="all">{t("objectives.allLevels")}</option>
           <option value="company">{t("level.company")}</option>
@@ -122,6 +105,7 @@ export default function ObjectivesPage() {
           className="input"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as ObjectiveStatus | "all")}
+          data-testid="status-filter"
         >
           <option value="all">{t("objectives.allStatuses")}</option>
           <option value="draft">{t("status.draft")}</option>
@@ -139,13 +123,14 @@ export default function ObjectivesPage() {
             className="input pl-9 w-full"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
+            data-testid="search-input"
           />
         </div>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="objectives-loading">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="card p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-4" />
@@ -156,14 +141,16 @@ export default function ObjectivesPage() {
           ))}
         </div>
       ) : filteredObjectives.length === 0 ? (
-        <EmptyState
-          icon={<Target className="w-7 h-7" />}
-          title={t("objectives.emptyTitle")}
-          description={t("objectives.emptyDesc")}
-          action={{ label: t("objectives.new"), href: "/objectives/new" }}
-        />
+        <div data-testid="objectives-empty-state">
+          <EmptyState
+            icon={<Target className="w-7 h-7" />}
+            title={t("objectives.emptyTitle")}
+            description={t("objectives.emptyDesc")}
+            action={{ label: t("objectives.new"), href: "/objectives/new" }}
+          />
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="objectives-grid">
           {filteredObjectives.map((obj) => (
             <Link key={obj.id} href={`/objectives/${obj.id}`}>
               <ObjectiveCard objective={obj} />

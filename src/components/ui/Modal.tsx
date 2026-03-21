@@ -47,7 +47,10 @@ export default function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          data-testid="modal-overlay"
+        >
           {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -56,6 +59,7 @@ export default function Modal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
+            data-testid="modal-backdrop"
           />
 
           {/* Panel */}
@@ -68,21 +72,23 @@ export default function Modal({
             role="dialog"
             aria-modal="true"
             aria-label={title}
+            data-testid="modal-content"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              <h2 className="text-lg font-semibold text-gray-900" data-testid="modal-title">{title}</h2>
               <button
                 onClick={onClose}
                 className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-gray-600"
                 aria-label="Fermer"
+                data-testid="modal-close-button"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="px-6 py-5">{children}</div>
+            <div className="px-6 py-5" data-testid="modal-body">{children}</div>
           </motion.div>
         </div>
       )}
