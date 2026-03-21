@@ -24,15 +24,23 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm"
+        >
           Aller au contenu principal
         </a>
         <I18nWrapper>
           <ErrorBoundary>
-            {children}
+            <div id="app-root">
+              {children}
+            </div>
           </ErrorBoundary>
           <ToastContainer />
         </I18nWrapper>
+        {/* Preload critical routes for faster navigation */}
+        <link rel="prefetch" href="/login" />
+        <link rel="prefetch" href="/dashboard" />
       </body>
     </html>
   );
