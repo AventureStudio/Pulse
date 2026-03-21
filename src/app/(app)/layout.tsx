@@ -81,27 +81,32 @@ export default function AppLayout({
         className={`${
           sidebarOpen ? "w-64" : "w-16"
         } bg-white border-r border-gray-200 flex flex-col transition-all duration-200 hidden lg:flex`}
+        role="navigation"
+        aria-label="Navigation principale"
       >
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-gray-100">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center flex-shrink-0">
-            <Activity className="w-5 h-5 text-white" />
+            <Activity className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
           {sidebarOpen && (
             <span className="font-bold text-gray-900 text-lg">Pulse</span>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"
+            className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+            aria-label={sidebarOpen ? "Réduire la navigation" : "Étendre la navigation"}
+            type="button"
           >
             <ChevronLeft
               className={`w-4 h-4 transition-transform ${!sidebarOpen ? "rotate-180" : ""}`}
+              aria-hidden="true"
             />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1" role="list">
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -110,14 +115,15 @@ export default function AppLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${isActive
                     ? "bg-primary-50 text-primary-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                  }`}
                 title={!sidebarOpen ? label : undefined}
+                aria-current={isActive ? "page" : undefined}
+                role="listitem"
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary-600" : ""}`} />
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary-600" : ""}`} aria-hidden="true" />
                 {sidebarOpen && <span>{label}</span>}
               </Link>
             );
@@ -130,8 +136,10 @@ export default function AppLayout({
             onClick={toggleLocale}
             className={`flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all`}
             title={sidebarOpen ? undefined : t("lang.toggle")}
+            type="button"
+            aria-label={`Changer la langue vers ${locale === "fr" ? "anglais" : "français"}`}
           >
-            <Globe className="w-5 h-5 flex-shrink-0" />
+            <Globe className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
             {sidebarOpen && (
               <span>
                 {locale === "fr" ? "FR" : "EN"} → {t("lang.toggle")}
@@ -143,7 +151,11 @@ export default function AppLayout({
         {/* User footer */}
         <div className="border-t border-gray-100 p-3">
           <div className="flex items-center gap-3 px-3 py-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+            <div 
+              className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0"
+              role="img"
+              aria-label={`Avatar de ${user.fullName}`}
+            >
               <span className="text-sm font-medium text-primary-700">
                 {user.fullName
                   .split(" ")
@@ -162,10 +174,12 @@ export default function AppLayout({
             {sidebarOpen && (
               <button
                 onClick={handleSignOut}
-                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
                 title={t("auth.signOut")}
+                aria-label="Se déconnecter"
+                type="button"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -173,27 +187,35 @@ export default function AppLayout({
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex lg:hidden z-50">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex lg:hidden z-50"
+        role="navigation"
+        aria-label="Navigation mobile"
+      >
         {navItems.slice(0, 5).map((item) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
+          const label = t(item.labelKey);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs ${
-                isActive ? "text-primary-600" : "text-gray-500"
-              }`}
+              className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs transition-colors ${isActive ? "text-primary-600" : "text-gray-500"
+                }`}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={label}
             >
-              <Icon className="w-5 h-5" />
-              <span>{t(item.labelKey)}</span>
+              <Icon className="w-5 h-5" aria-hidden="true" />
+              <span>{label}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Main content */}
-      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</main>
+      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">
+        {children}
+      </main>
     </div>
   );
 }
