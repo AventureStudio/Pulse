@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -26,6 +26,9 @@ export default function Modal({
   children,
   size = "md",
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -35,9 +38,27 @@ export default function Modal({
 
   useEffect(() => {
     if (isOpen) {
+      // Store the previously focused element
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      
+      // Focus the modal after animation
+      const timer = setTimeout(() => {
+        modalRef.current?.focus();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      // Restore focus when modal closes
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+      }
     }
+    
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
@@ -56,10 +77,12 @@ export default function Modal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* Panel */}
           <motion.div
+            ref={modalRef}
             className={`relative w-full ${sizeClasses[size]} card overflow-hidden shadow-xl`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -67,22 +90,25 @@ export default function Modal({
             transition={{ duration: 0.2, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+            tabIndex={-1}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              <h2 id="modal-title" className="text-lg font-semibold text-gray-900">{title}</h2>
               <button
                 onClick={onClose}
                 className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-gray-600"
-                aria-label="Fermer"
+                aria-label={`Fermer la boîte de dialogue ${title}`}
+                type="button"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             {/* Body */}
-            <div className="px-6 py-5">{children}</div>
+            <div id="modal-description" className="px-6 py-5">{children}</div>
           </motion.div>
         </div>
       )}

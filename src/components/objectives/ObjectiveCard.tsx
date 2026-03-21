@@ -39,9 +39,12 @@ export default function ObjectiveCard({
   const { t } = useI18n();
   const level = levelConfig[objective.level];
   const keyResultsCount = (objective as unknown as { keyResultsCount?: number }).keyResultsCount ?? objective.keyResults?.length ?? 0;
+  const progressLabel = `Progression : ${Math.round(objective.progress)}%`;
+  const confidenceLabel = objective.confidence === 'on_track' ? 'En bonne voie' : 
+    objective.confidence === 'at_risk' ? 'À risque' : 'En retard';
 
   return (
-    <div
+    <article
       className="card-interactive p-5"
       onClick={onClick}
       role={onClick ? "button" : undefined}
@@ -56,15 +59,19 @@ export default function ObjectiveCard({
             }
           : undefined
       }
+      aria-label={onClick ? `Voir les détails de l'objectif : ${objective.title}` : undefined}
     >
       {/* Header: level badge + confidence */}
       <div className="flex items-center justify-between gap-2">
         <span
           className={`badge ${level.bg} ${level.text}`}
+          aria-label={`Niveau : ${t(level.labelKey)}`}
         >
           {t(level.labelKey)}
         </span>
-        <ConfidenceBadge confidence={objective.confidence} size="sm" />
+        <div aria-label={`Statut de confiance : ${confidenceLabel}`}>
+          <ConfidenceBadge confidence={objective.confidence} size="sm" />
+        </div>
       </div>
 
       {/* Title */}
@@ -73,25 +80,25 @@ export default function ObjectiveCard({
       </h3>
 
       {/* Progress */}
-      <div className="mt-3">
+      <div className="mt-3" aria-label={progressLabel}>
         <ProgressBar progress={objective.progress} size="sm" showLabel />
       </div>
 
       {/* Footer: meta */}
       <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
         {keyResultsCount > 0 && (
-          <span className="inline-flex items-center gap-1">
-            <KeyRound className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1" aria-label={`${keyResultsCount} résultat${keyResultsCount > 1 ? 's' : ''} clé${keyResultsCount > 1 ? 's' : ''}`}>
+            <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
             {keyResultsCount} {t("kr.title")}{keyResultsCount > 1 ? "s" : ""}
           </span>
         )}
         {objective.owner && (
-          <span className="inline-flex items-center gap-1">
-            <User className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1" aria-label={`Responsable : ${objective.owner.fullName}`}>
+            <User className="h-3.5 w-3.5" aria-hidden="true" />
             {objective.owner.fullName}
           </span>
         )}
       </div>
-    </div>
+    </article>
   );
 }
