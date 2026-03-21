@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createAuthClient } from "@/lib/supabase-auth-client";
 import { Activity } from "lucide-react";
 
 function CallbackContent() {
@@ -20,8 +20,11 @@ function CallbackContent() {
       return;
     }
 
+    // Use the central auth client for session management
+    const authClient = createAuthClient();
+
     // Fallback: listen for auth state change (handles hash-based tokens from implicit flow)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = authClient.auth.onAuthStateChange(async (event, session) => {
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
         subscription.unsubscribe();
 
@@ -51,7 +54,7 @@ function CallbackContent() {
     });
 
     // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    authClient.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         subscription.unsubscribe();
         window.location.href = "/dashboard";

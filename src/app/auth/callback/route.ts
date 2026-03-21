@@ -6,8 +6,8 @@ const AUTH_COOKIE_DOMAIN =
   process.env.NODE_ENV === "production" ? ".aventure-studio.com" : undefined;
 
 /**
- * Server-side callback for PKCE magic link flow.
- * Supabase redirects here with ?code=xxx after the user clicks the magic link.
+ * Server-side callback for OAuth and PKCE flows.
+ * Supabase redirects here with ?code=xxx after successful OAuth / magic link.
  * We exchange the code for a session using the CENTRAL auth project.
  */
 export async function GET(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (code) {
-      // PKCE flow — exchange authorization code for session
+      // PKCE / OAuth flow — exchange authorization code for session
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) throw error;
       userId = data.user?.id;
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       fullName = data.user?.user_metadata?.full_name;
     }
   } catch (err) {
-    console.error("Auth confirm error:", err);
+    console.error("Auth callback error:", err);
     return NextResponse.redirect(new URL("/login?error=auth", origin));
   }
 

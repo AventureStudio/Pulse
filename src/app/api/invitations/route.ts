@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/supabase-api";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin, supabaseAuthAdmin } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   let user;
@@ -31,6 +26,7 @@ export async function POST(request: NextRequest) {
       status: "pending",
     }));
 
+    // Store invitations in Pulse data DB
     const { data, error } = await supabaseAdmin
       .from("invitations")
       .insert(invitations)
@@ -41,11 +37,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
     }
 
-    // Send magic link invitations via Supabase Auth
-    const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    // Send magic link invitations via CENTRAL auth project
+    const origin = request.headers.get("origin") || request.nextUrl.origin;
     const sendResults = await Promise.allSettled(
       emails.map((email: string) =>
-        supabaseAdmin.auth.admin.generateLink({
+        supabaseAuthAdmin.auth.admin.generateLink({
           type: "magiclink",
           email: email.toLowerCase().trim(),
           options: {

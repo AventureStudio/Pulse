@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const AUTH_COOKIE_DOMAIN =
+  process.env.NODE_ENV === "production" ? ".aventure-studio.com" : undefined;
+
 /**
- * Create a Supabase client that reads the session from request cookies.
+ * Create a Supabase client pointed at the CENTRAL auth project
+ * that reads the session from request cookies.
  * Use this in API routes to identify the authenticated user.
  */
-function createSupabaseFromRequest(request: NextRequest) {
+function createAuthFromRequest(request: NextRequest) {
   const response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,11 +21,17 @@ function createSupabaseFromRequest(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, {
+              ...options,
+              domain: AUTH_COOKIE_DOMAIN,
+              path: "/",
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+            })
           );
         },
       },
-    },
+    }
   );
   return supabase;
 }
@@ -31,7 +41,7 @@ function createSupabaseFromRequest(request: NextRequest) {
  * Returns the user or throws a 401 response.
  */
 export async function requireAuth(request: NextRequest) {
-  const supabase = createSupabaseFromRequest(request);
+  const supabase = createAuthFromRequest(request);
   const {
     data: { user },
     error,
@@ -40,7 +50,7 @@ export async function requireAuth(request: NextRequest) {
   if (error || !user) {
     throw NextResponse.json(
       { error: "Non authentifié" },
-      { status: 401 },
+      { status: 401 }
     );
   }
 

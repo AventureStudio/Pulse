@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createAuthClient } from "@/lib/supabase-auth-client";
 import { supabase } from "@/lib/supabase";
 import type { User as AppUser } from "@/types";
 
@@ -8,6 +9,7 @@ export function useAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Use the Pulse data client to fetch the user profile
   async function fetchProfile(authUserId: string): Promise<AppUser | null> {
     try {
       const { data, error } = await supabase
@@ -37,10 +39,12 @@ export function useAuth() {
 
   useEffect(() => {
     let mounted = true;
+    // Use the central auth client for session management
+    const authClient = createAuthClient();
 
     async function init() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await authClient.auth.getSession();
 
         if (!mounted) return;
 
@@ -59,10 +63,10 @@ export function useAuth() {
 
     init();
 
-    // Listen for auth changes
+    // Listen for auth changes on the central auth client
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = authClient.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
       if (event === "SIGNED_OUT" || !session) {

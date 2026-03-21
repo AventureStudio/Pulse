@@ -32,6 +32,8 @@ export const translations = {
   "auth.linkExpiry": { fr: "Cliquez sur le lien dans l'email pour vous connecter. Le lien expire dans 1 heure.", en: "Click the link in the email to log in. The link expires in 1 hour." },
   "auth.useAnotherEmail": { fr: "Utiliser un autre email", en: "Use another email" },
   "auth.signOut": { fr: "Se déconnecter", en: "Sign out" },
+  "auth.orContinueWith": { fr: "ou continuer avec", en: "or continue with" },
+  "auth.signInWithGoogle": { fr: "Continuer avec Google", en: "Continue with Google" },
 
   // ── Nav ──
   "nav.dashboard": { fr: "Dashboard", en: "Dashboard" },
@@ -327,6 +329,13 @@ export const translations = {
   "invitations.pending": { fr: "En attente", en: "Pending" },
   "invitations.accepted": { fr: "Acceptée", en: "Accepted" },
   "invitations.expired": { fr: "Expirée", en: "Expired" },
+
+  // ── Auto-Fix (Bob) ──
+  "autoFix.fixing": { fr: "Correction en cours...", en: "Fixing automatically..." },
+  "autoFix.fixed": { fr: "Corrigé ! Nouvelle tentative...", en: "Fixed! Retrying..." },
+  "autoFix.fixFailed": { fr: "La correction automatique a échoué", en: "Automatic fix failed" },
+  "autoFix.retryFailed": { fr: "L'erreur persiste après correction", en: "Error persists after fix" },
+  "autoFix.rateLimitWait": { fr: "Trop de requêtes, patientez...", en: "Too many requests, please wait..." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

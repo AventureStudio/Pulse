@@ -1,2 +1,4 @@
 /** @type {import('next').NextConfig} */
-module.exports = { }
+module.exports = {
+  transpilePackages: ["@aventure-studio/bob"],
+}

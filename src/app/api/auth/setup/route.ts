@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const AUTH_COOKIE_DOMAIN =
+  process.env.NODE_ENV === "production" ? ".aventure-studio.com" : undefined;
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify the session from cookies instead of trusting client-sent userId
+    // Verify the session from cookies using CENTRAL auth project
     const response = NextResponse.next({ request });
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,11 +19,17 @@ export async function POST(request: NextRequest) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, {
+                ...options,
+                domain: AUTH_COOKIE_DOMAIN,
+                path: "/",
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+              })
             );
           },
         },
-      },
+      }
     );
 
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -40,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing userId or email" }, { status: 400 });
     }
 
-    // Check if there's a pending invitation for this email
+    // Check if there's a pending invitation (in Pulse data DB)
     const { data: invitation } = await supabaseAdmin
       .from("invitations")
       .select("*")
