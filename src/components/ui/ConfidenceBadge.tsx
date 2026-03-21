@@ -41,8 +41,9 @@ export default function ConfidenceBadge({
       className={`inline-flex items-center gap-1.5 rounded-full font-medium ${c.bg} ${c.text} ${
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-xs"
       }`}
+      aria-label={`Statut de confiance: ${c.label}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} aria-hidden="true" />
       {c.label}
     </span>
   );

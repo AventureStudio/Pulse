@@ -7,6 +7,7 @@ interface ProgressBarProps {
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
+  label?: string;
 }
 
 function getBarColor(progress: number): string {
@@ -31,15 +32,22 @@ export default function ProgressBar({
   size = "md",
   showLabel = false,
   className = "",
+  label,
 }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, progress));
   const color = getBarColor(clamped);
   const height = getTrackHeight(size);
+  const progressLabel = label || `Progression ${Math.round(clamped)}%`;
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <div
         className={`relative w-full overflow-hidden rounded-full bg-gray-100 ${height}`}
+        role="progressbar"
+        aria-valuenow={Math.round(clamped)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={progressLabel}
       >
         <motion.div
           className={`absolute inset-y-0 left-0 rounded-full ${color}`}

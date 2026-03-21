@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -26,6 +26,9 @@ export default function Modal({
   children,
   size = "md",
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = `modal-title-${Math.random().toString(36).substr(2, 9)}`;
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -37,6 +40,15 @@ export default function Modal({
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      
+      // Focus management
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements?.[0] as HTMLElement;
+      if (firstElement) {
+        setTimeout(() => firstElement.focus(), 100);
+      }
     }
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -60,6 +72,7 @@ export default function Modal({
 
           {/* Panel */}
           <motion.div
+            ref={modalRef}
             className={`relative w-full ${sizeClasses[size]} card overflow-hidden shadow-xl`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -67,15 +80,15 @@ export default function Modal({
             transition={{ duration: 0.2, ease: "easeOut" }}
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-labelledby={titleId}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              <h2 id={titleId} className="text-lg font-semibold text-gray-900">{title}</h2>
               <button
                 onClick={onClose}
                 className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-gray-600"
-                aria-label="Fermer"
+                aria-label="Fermer la modal"
               >
                 <X className="h-5 w-5" />
               </button>
