@@ -17,6 +17,18 @@ function applySecurityHeaders(response: NextResponse) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+  // Navigation stability headers
+  response.headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  return response;
+}
+
+function applyNavigationHeaders(response: NextResponse) {
+  // Headers to improve navigation stability and prevent frame detachment
+  response.headers.set("X-Navigation-Stable", "true");
+  response.headers.set("Connection", "keep-alive");
+  response.headers.set("Keep-Alive", "timeout=5, max=1000");
   return response;
 }
 
@@ -81,17 +93,24 @@ export async function middleware(request: NextRequest) {
 
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    applySecurityHeaders(redirectResponse);
+    applyNavigationHeaders(redirectResponse);
+    return redirectResponse;
   }
 
   // If user is logged in and trying to access login page, redirect to dashboard
   if (user && (pathname === "/login" || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    applySecurityHeaders(redirectResponse);
+    applyNavigationHeaders(redirectResponse);
+    return redirectResponse;
   }
 
   applySecurityHeaders(supabaseResponse);
+  applyNavigationHeaders(supabaseResponse);
   return supabaseResponse;
 }
 
