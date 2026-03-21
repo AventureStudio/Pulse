@@ -29,6 +29,24 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
   }
+
+  /* Image optimization - prevent oversized images without dimensions */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  img:not([width]):not([height]) {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 400px;
+  }
+
+  /* Ensure Next.js Image component doesn't break layout */
+  img[data-nimg] {
+    color: transparent;
+  }
 }
 
 /* ─── Components ────────────────────────────────────────────────── */
@@ -42,6 +60,40 @@
     @apply card cursor-pointer transition-all duration-200;
     @apply hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5;
     @apply active:translate-y-0 active:shadow-sm;
+  }
+
+  /* ── Images ── */
+  .img-container {
+    @apply relative overflow-hidden bg-gray-100;
+  }
+
+  .img-responsive {
+    @apply w-full h-auto object-cover;
+  }
+
+  .img-aspect-square {
+    @apply aspect-square;
+  }
+
+  .img-aspect-video {
+    aspect-ratio: 16/9;
+  }
+
+  .img-aspect-wide {
+    aspect-ratio: 2/1;
+  }
+
+  .img-aspect-portrait {
+    aspect-ratio: 3/4;
+  }
+
+  .img-loading {
+    @apply animate-pulse bg-gray-200;
+  }
+
+  /* Prevent layout shift for images */
+  .img-placeholder {
+    @apply bg-gray-100 flex items-center justify-center text-gray-400 text-sm;
   }
 
   /* ── Buttons ── */
@@ -174,6 +226,29 @@
 
   .skeleton {
     @apply animate-pulse rounded-lg bg-gray-200;
+  }
+
+  /* Image utilities */
+  .img-constrain {
+    max-width: 100%;
+    max-height: 100vh;
+    width: auto;
+    height: auto;
+  }
+
+  .img-fit-cover {
+    object-fit: cover;
+  }
+
+  .img-fit-contain {
+    object-fit: contain;
+  }
+
+  /* Prevent images from breaking layout */
+  .img-safe {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
   }
 
   /* Thin scrollbar */
