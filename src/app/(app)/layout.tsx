@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/lib/supabase-auth";
 import { useI18n } from "@/lib/i18n";
+import NavigationHandler from "@/components/ui/NavigationHandler";
 import type { TranslationKey } from "@/lib/i18n";
 
 const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
@@ -76,6 +77,8 @@ export default function AppLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      <NavigationHandler />
+      
       {/* Sidebar */}
       <aside
         className={`${
