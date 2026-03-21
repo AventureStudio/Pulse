@@ -1,16 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createAuthClient } from "@/lib/supabase-auth-client";
 import { supabase } from "@/lib/supabase";
 import type { User as AppUser } from "@/types";
+
+// Cache for user profile to avoid redundant API calls
+let userCache: { [key: string]: AppUser } = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export function useAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use the Pulse data client to fetch the user profile
-  async function fetchProfile(authUserId: string): Promise<AppUser | null> {
+  // Optimized profile fetching with caching
+  const fetchProfile = useCallback(async (authUserId: string): Promise<AppUser | null> => {
+    // Check cache first
+    const cached = userCache[authUserId];
+    if (cached && Date.now() - cached.createdAt < CACHE_DURATION) {
+      return cached;
+    }
+
     try {
       const { data, error } = await supabase
         .from("users")
@@ -20,7 +30,7 @@ export function useAuth() {
 
       if (error || !data) return null;
 
-      return {
+      const userProfile: AppUser = {
         id: data.id,
         fullName: data.full_name,
         email: data.email,
@@ -32,38 +42,50 @@ export function useAuth() {
         onboarded: data.onboarded ?? false,
         createdAt: data.created_at,
       };
+
+      // Cache the result
+      userCache[authUserId] = userProfile;
+      
+      return userProfile;
     } catch {
       return null;
     }
-  }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-    // Use the central auth client for session management
+    let timeoutId: NodeJS.Timeout;
+    
     const authClient = createAuthClient();
 
     async function init() {
       try {
-        const { data: { session } } = await authClient.auth.getSession();
+        // Delay auth check to not block initial render
+        timeoutId = setTimeout(async () => {
+          if (!mounted) return;
+          
+          const { data: { session } } = await authClient.auth.getSession();
 
-        if (!mounted) return;
+          if (!mounted) return;
 
-        if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          if (mounted && profile) {
-            setUser(profile);
+          if (session?.user) {
+            const profile = await fetchProfile(session.user.id);
+            if (mounted && profile) {
+              setUser(profile);
+            }
           }
-        }
+          
+          if (mounted) setLoading(false);
+        }, 50); // Small delay to not block LCP
       } catch (err) {
         console.error("Auth init error:", err);
-      } finally {
         if (mounted) setLoading(false);
       }
     }
 
     init();
 
-    // Listen for auth changes on the central auth client
+    // Listen for auth changes
     const {
       data: { subscription },
     } = authClient.auth.onAuthStateChange(async (event, session) => {
@@ -71,6 +93,7 @@ export function useAuth() {
 
       if (event === "SIGNED_OUT" || !session) {
         setUser(null);
+        userCache = {}; // Clear cache on signout
       } else if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         if (mounted) {
@@ -81,9 +104,10 @@ export function useAuth() {
 
     return () => {
       mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   return { user, loading };
 }
