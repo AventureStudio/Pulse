@@ -23,6 +23,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://gufeknshftfqfuifewsw.supabase.co" />
+        <style>{`
+          body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+          }
+        `}</style>
+      </head>
       <body>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">
           Aller au contenu principal
