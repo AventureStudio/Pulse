@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import {
   Target,
@@ -11,112 +11,111 @@ import {
   Building2,
   Users,
   User,
-  Plus,
+  RefreshCw,
 } from "lucide-react";
-import type { Objective, Period } from "@/types";
+import type { Objective } from "@/types";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import EmptyState from "@/components/ui/EmptyState";
 import { useI18n } from "@/lib/i18n";
+import { useDashboardData } from "@/lib/hooks/useDashboardData";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { t } = useI18n();
-  const [objectives, setObjectives] = useState<Objective[]>([]);
-  const [periods, setPeriods] = useState<Period[]>([]);
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const {
+    objectives,
+    periods,
+    selectedPeriodId,
+    loading,
+    error,
+    setSelectedPeriodId,
+    refresh
+  } = useDashboardData();
 
-  // Fetch periods
-  useEffect(() => {
-    async function fetchPeriods() {
-      try {
-        const res = await fetch("/api/periods");
-        if (res.ok) {
-          const data: Period[] = await res.json();
-          setPeriods(data);
-          const active = data.find((p) => p.isActive);
-          if (active) setSelectedPeriodId(active.id);
-          else if (data.length > 0) setSelectedPeriodId(data[0].id);
-        }
-      } catch {
-        // silently fail
-      }
-    }
-    fetchPeriods();
-  }, []);
+  // Memoize heavy calculations
+  const stats = useMemo(() => {
+    const totalObjectives = objectives.length;
+    const onTrackCount = objectives.filter((o) => o.confidence === "on_track").length;
+    const atRiskCount = objectives.filter((o) => o.confidence === "at_risk").length;
+    const offTrackCount = objectives.filter((o) => o.confidence === "off_track").length;
+    const avgProgress =
+      totalObjectives > 0
+        ? Math.round(objectives.reduce((sum, o) => sum + o.progress, 0) / totalObjectives)
+        : 0;
 
-  // Fetch objectives for the selected period
-  useEffect(() => {
-    if (!selectedPeriodId) {
-      setLoading(false);
-      return;
-    }
-    async function fetchObjectives() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/objectives?periodId=${selectedPeriodId}`);
-        if (res.ok) {
-          const data: Objective[] = await res.json();
-          setObjectives(data);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchObjectives();
-  }, [selectedPeriodId]);
+    return {
+      totalObjectives,
+      onTrackCount,
+      atRiskCount,
+      offTrackCount,
+      avgProgress,
+      items: [
+        {
+          label: t("dashboard.totalObjectives"),
+          value: totalObjectives,
+          icon: Target,
+          color: "text-primary-600 bg-primary-100",
+        },
+        {
+          label: t("dashboard.onTrack"),
+          value: onTrackCount,
+          icon: TrendingUp,
+          color: "text-success-600 bg-success-100",
+        },
+        {
+          label: t("dashboard.atRisk"),
+          value: atRiskCount,
+          icon: AlertTriangle,
+          color: "text-warning-600 bg-warning-100",
+        },
+        {
+          label: t("dashboard.offTrack"),
+          value: offTrackCount,
+          icon: XCircle,
+          color: "text-danger-600 bg-danger-100",
+        },
+      ]
+    };
+  }, [objectives, t]);
 
-  // Compute stats
-  const totalObjectives = objectives.length;
-  const onTrackCount = objectives.filter((o) => o.confidence === "on_track").length;
-  const atRiskCount = objectives.filter((o) => o.confidence === "at_risk").length;
-  const offTrackCount = objectives.filter((o) => o.confidence === "off_track").length;
-  const avgProgress =
-    totalObjectives > 0
-      ? Math.round(objectives.reduce((sum, o) => sum + o.progress, 0) / totalObjectives)
-      : 0;
+  const { recentObjectives, levelBreakdown } = useMemo(() => {
+    const recent = [...objectives]
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
 
-  const recentObjectives = [...objectives]
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+    const companyObjectives = objectives.filter((o) => o.level === "company");
+    const teamObjectives = objectives.filter((o) => o.level === "team");
+    const individualObjectives = objectives.filter((o) => o.level === "individual");
 
-  const companyObjectives = objectives.filter((o) => o.level === "company");
-  const teamObjectives = objectives.filter((o) => o.level === "team");
-  const individualObjectives = objectives.filter((o) => o.level === "individual");
+    const avgProgressForLevel = (objs: Objective[]) =>
+      objs.length > 0
+        ? Math.round(objs.reduce((sum, o) => sum + o.progress, 0) / objs.length)
+        : 0;
 
-  const avgProgressForLevel = (objs: Objective[]) =>
-    objs.length > 0
-      ? Math.round(objs.reduce((sum, o) => sum + o.progress, 0) / objs.length)
-      : 0;
+    const breakdown = [
+      {
+        label: t("level.company"),
+        icon: Building2,
+        count: companyObjectives.length,
+        progress: avgProgressForLevel(companyObjectives),
+      },
+      {
+        label: t("level.team"),
+        icon: Users,
+        count: teamObjectives.length,
+        progress: avgProgressForLevel(teamObjectives),
+      },
+      {
+        label: t("level.individual"),
+        icon: User,
+        count: individualObjectives.length,
+        progress: avgProgressForLevel(individualObjectives),
+      },
+    ];
 
-  const stats = [
-    {
-      label: t("dashboard.totalObjectives"),
-      value: totalObjectives,
-      icon: Target,
-      color: "text-primary-600 bg-primary-100",
-    },
-    {
-      label: t("dashboard.onTrack"),
-      value: onTrackCount,
-      icon: TrendingUp,
-      color: "text-success-600 bg-success-100",
-    },
-    {
-      label: t("dashboard.atRisk"),
-      value: atRiskCount,
-      icon: AlertTriangle,
-      color: "text-warning-600 bg-warning-100",
-    },
-    {
-      label: t("dashboard.offTrack"),
-      value: offTrackCount,
-      icon: XCircle,
-      color: "text-danger-600 bg-danger-100",
-    },
-  ];
+    return { recentObjectives: recent, levelBreakdown: breakdown };
+  }, [objectives, t]);
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -126,18 +125,36 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.title")}</h1>
           <p className="text-gray-500 text-sm mt-1">{t("dashboard.subtitle")}</p>
         </div>
-        <select
-          className="input"
-          value={selectedPeriodId}
-          onChange={(e) => setSelectedPeriodId(e.target.value)}
-        >
-          {periods.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label} {p.isActive ? `(${t("common.active").toLowerCase()})` : ""}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          {error && (
+            <button
+              onClick={refresh}
+              className="btn-ghost p-2"
+              title="Réessayer"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          )}
+          <select
+            className="input"
+            value={selectedPeriodId}
+            onChange={(e) => setSelectedPeriodId(e.target.value)}
+            disabled={loading}
+          >
+            {periods.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label} {p.isActive ? `(${t("common.active").toLowerCase()})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {error && (
+        <div className="card p-4 mb-6 bg-red-50 border-red-200">
+          <p className="text-red-800 text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -148,7 +165,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : totalObjectives === 0 ? (
+      ) : stats.totalObjectives === 0 ? (
         <EmptyState
           icon={<Activity className="w-7 h-7" />}
           title={t("dashboard.emptyTitle")}
@@ -159,7 +176,7 @@ export default function DashboardPage() {
         <>
           {/* Stats cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat) => (
+            {stats.items.map((stat) => (
               <div key={stat.label} className="card p-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-500">
@@ -180,9 +197,9 @@ export default function DashboardPage() {
               <span className="text-sm font-medium text-gray-500">
                 {t("dashboard.avgProgress")}
               </span>
-              <span className="text-lg font-bold text-gray-900">{avgProgress}%</span>
+              <span className="text-lg font-bold text-gray-900">{stats.avgProgress}%</span>
             </div>
-            <ProgressBar progress={avgProgress} size="lg" />
+            <ProgressBar progress={stats.avgProgress} size="lg" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -216,26 +233,7 @@ export default function DashboardPage() {
                 {t("dashboard.byLevel")}
               </h2>
               <div className="space-y-5">
-                {[
-                  {
-                    label: t("level.company"),
-                    icon: Building2,
-                    count: companyObjectives.length,
-                    progress: avgProgressForLevel(companyObjectives),
-                  },
-                  {
-                    label: t("level.team"),
-                    icon: Users,
-                    count: teamObjectives.length,
-                    progress: avgProgressForLevel(teamObjectives),
-                  },
-                  {
-                    label: t("level.individual"),
-                    icon: User,
-                    count: individualObjectives.length,
-                    progress: avgProgressForLevel(individualObjectives),
-                  },
-                ].map((level) => (
+                {levelBreakdown.map((level) => (
                   <div key={level.label}>
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
@@ -260,5 +258,13 @@ export default function DashboardPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ErrorBoundary>
+      <DashboardContent />
+    </ErrorBoundary>
   );
 }

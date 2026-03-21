@@ -42,17 +42,35 @@ function createAuthFromRequest(request: NextRequest) {
  */
 export async function requireAuth(request: NextRequest) {
   const supabase = createAuthFromRequest(request);
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  
+  // Add timeout to auth check
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Auth timeout')), 3000);
+  });
+  
+  try {
+    const authPromise = supabase.auth.getUser();
+    const { data: { user }, error } = await Promise.race([
+      authPromise,
+      timeoutPromise
+    ]) as any;
 
-  if (error || !user) {
+    if (error || !user) {
+      throw NextResponse.json(
+        { error: "Non authentifié" },
+        { status: 401 }
+      );
+    }
+
+    return user;
+  } catch (err) {
+    if (err instanceof NextResponse) {
+      throw err;
+    }
+    
     throw NextResponse.json(
-      { error: "Non authentifié" },
-      { status: 401 }
+      { error: "Erreur d'authentification" },
+      { status: 500 }
     );
   }
-
-  return user;
 }

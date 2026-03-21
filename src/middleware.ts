@@ -20,10 +20,44 @@ function applySecurityHeaders(response: NextResponse) {
   return response;
 }
 
+function applyPerformanceHeaders(response: NextResponse, pathname: string) {
+  // Cache static assets aggressively
+  if (pathname.startsWith('/_next/static') || pathname.includes('.')) {
+    response.headers.set(
+      "Cache-Control",
+      "public, max-age=31536000, immutable"
+    );
+  }
+  
+  // Cache API responses briefly
+  if (pathname.startsWith('/api/')) {
+    response.headers.set(
+      "Cache-Control",
+      "private, max-age=0, s-maxage=30, stale-while-revalidate=60"
+    );
+  }
+  
+  // Prefetch DNS for external resources
+  response.headers.set(
+    "Link",
+    "<https://fonts.googleapis.com>; rel=dns-prefetch, <https://fonts.gstatic.com>; rel=dns-prefetch"
+  );
+  
+  // Enable early hints for critical resources
+  if (pathname === '/dashboard' || pathname.startsWith('/objectives')) {
+    response.headers.set(
+      "Link",
+      "</api/periods>; rel=prefetch, </api/objectives>; rel=prefetch"
+    );
+  }
+
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  // Use CENTRAL Supabase for auth validation
+  // Use CENTRAL Supabase for auth validation with timeout
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -51,10 +85,20 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove this call
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Add timeout to auth check
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => resolve({ data: { user: null } }), 2000);
+  });
+
+  let user = null;
+  try {
+    const authPromise = supabase.auth.getUser();
+    const result = await Promise.race([authPromise, timeoutPromise]) as any;
+    user = result.data?.user || null;
+  } catch (error) {
+    console.warn('Auth check timeout or error:', error);
+    user = null;
+  }
 
   const { pathname } = request.nextUrl;
 
@@ -81,17 +125,23 @@ export async function middleware(request: NextRequest) {
 
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    applySecurityHeaders(redirectResponse);
+    return redirectResponse;
   }
 
   // If user is logged in and trying to access login page, redirect to dashboard
   if (user && (pathname === "/login" || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    applySecurityHeaders(redirectResponse);
+    applyPerformanceHeaders(redirectResponse, pathname);
+    return redirectResponse;
   }
 
   applySecurityHeaders(supabaseResponse);
+  applyPerformanceHeaders(supabaseResponse, pathname);
   return supabaseResponse;
 }
 
