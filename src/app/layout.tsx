@@ -23,13 +23,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <meta name="color-scheme" content="light" />
+      </head>
       <body>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm">
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:no-underline"
+          aria-label="Passer au contenu principal"
+        >
           Aller au contenu principal
         </a>
         <I18nWrapper>
           <ErrorBoundary>
-            {children}
+            <div id="root">
+              {children}
+            </div>
           </ErrorBoundary>
           <ToastContainer />
         </I18nWrapper>
