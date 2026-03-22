@@ -13,16 +13,19 @@ import {
   User,
   Plus,
 } from "lucide-react";
-import type { Objective, Period } from "@/types";
+import type { Objective, Period, Team } from "@/types";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ConfidenceBadge from "@/components/ui/ConfidenceBadge";
 import EmptyState from "@/components/ui/EmptyState";
+import OKRHeatMap from "@/components/dashboard/OKRHeatMap";
+import RealTimeChart from "@/components/dashboard/RealTimeChart";
 import { useI18n } from "@/lib/i18n";
 
 export default function DashboardPage() {
   const { t } = useI18n();
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +46,22 @@ export default function DashboardPage() {
       }
     }
     fetchPeriods();
+  }, []);
+
+  // Fetch teams
+  useEffect(() => {
+    async function fetchTeams() {
+      try {
+        const res = await fetch("/api/teams");
+        if (res.ok) {
+          const data: Team[] = await res.json();
+          setTeams(data);
+        }
+      } catch {
+        // silently fail
+      }
+    }
+    fetchTeams();
   }, []);
 
   // Fetch objectives for the selected period
@@ -183,6 +202,12 @@ export default function DashboardPage() {
               <span className="text-lg font-bold text-gray-900">{avgProgress}%</span>
             </div>
             <ProgressBar progress={avgProgress} size="lg" />
+          </div>
+
+          {/* New visualization components */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+            <OKRHeatMap objectives={objectives} teams={teams} />
+            <RealTimeChart objectives={objectives} periodId={selectedPeriodId} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
