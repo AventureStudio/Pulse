@@ -17,6 +17,26 @@ function applySecurityHeaders(response: NextResponse) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+  
+  // Add navigation-specific headers to prevent frame detachment issues
+  response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  
+  return response;
+}
+
+function createSafeRedirect(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  
+  // Ensure the redirect maintains proper navigation state
+  const response = NextResponse.redirect(url);
+  
+  // Add headers to help with navigation stability
+  response.headers.set("X-Navigation-Safe", "true");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  
   return response;
 }
 
@@ -51,48 +71,53 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove this call
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    // Refresh session — IMPORTANT: do not remove this call
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+    const { pathname } = request.nextUrl;
 
-  // Public routes that don't require auth
-  const isPublicRoute =
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/callback" ||
-    pathname.startsWith("/auth/confirm") ||
-    pathname.startsWith("/auth/callback") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname === "/api/auth/setup";
+    // Public routes that don't require auth
+    const isPublicRoute =
+      pathname === "/" ||
+      pathname === "/login" ||
+      pathname === "/callback" ||
+      pathname.startsWith("/auth/confirm") ||
+      pathname.startsWith("/auth/callback") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/favicon") ||
+      pathname === "/api/auth/setup";
 
-  // If no user and trying to access protected route, redirect to login
-  if (!user && !isPublicRoute) {
-    // For API routes, return 401 instead of redirect
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
+    // If no user and trying to access protected route, redirect to login
+    if (!user && !isPublicRoute) {
+      // For API routes, return 401 instead of redirect
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Non authentifié" },
+          { status: 401 }
+        );
+      }
+
+      return createSafeRedirect(request, "/login");
     }
 
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+    // If user is logged in and trying to access login page, redirect to dashboard
+    if (user && (pathname === "/login" || pathname === "/")) {
+      return createSafeRedirect(request, "/dashboard");
+    }
 
-  // If user is logged in and trying to access login page, redirect to dashboard
-  if (user && (pathname === "/login" || pathname === "/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    applySecurityHeaders(supabaseResponse);
+    return supabaseResponse;
+  } catch (error) {
+    console.error("Middleware error:", error);
+    
+    // In case of any middleware error, let the request pass through
+    // This prevents blocking navigation due to temporary issues
+    applySecurityHeaders(supabaseResponse);
+    return supabaseResponse;
   }
-
-  applySecurityHeaders(supabaseResponse);
-  return supabaseResponse;
 }
 
 export const config = {
