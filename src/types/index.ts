@@ -4,6 +4,10 @@ export type ObjectiveStatus = "draft" | "active" | "completed" | "cancelled";
 export type Confidence = "on_track" | "at_risk" | "off_track";
 export type MetricType = "number" | "percentage" | "currency" | "boolean";
 export type UserRole = "admin" | "manager" | "member";
+export type ReminderFrequency = "daily" | "weekly" | "bi-weekly" | "monthly";
+export type ReminderTrigger = "due_date" | "no_update" | "progress_stale";
+export type ReminderStatus = "pending" | "sent" | "completed" | "cancelled";
+export type EscalationLevel = "owner" | "team_lead" | "manager" | "admin";
 
 // ── Core models ──
 export interface User {
@@ -31,6 +35,48 @@ export interface Invitation {
   status: InvitationStatus;
   createdAt: string;
   acceptedAt: string | null;
+}
+
+// ── Reminders System ──
+export interface Reminder {
+  id: string;
+  objectiveId: string;
+  keyResultId: string | null;
+  trigger: ReminderTrigger;
+  frequency: ReminderFrequency;
+  isActive: boolean;
+  lastSentAt: string | null;
+  nextSendAt: string;
+  escalationRules: EscalationRule[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EscalationRule {
+  level: EscalationLevel;
+  delayDays: number;
+  recipientIds: string[];
+  isActive: boolean;
+}
+
+export interface ReminderSettings {
+  frequency: ReminderFrequency;
+  enableEscalation: boolean;
+  escalationDelay: number;
+  customMessage: string | null;
+  triggers: ReminderTrigger[];
+}
+
+export interface ReminderLog {
+  id: string;
+  reminderId: string;
+  status: ReminderStatus;
+  recipientId: string;
+  escalationLevel: EscalationLevel;
+  sentAt: string;
+  readAt: string | null;
+  actionTaken: boolean;
+  createdAt: string;
 }
 
 // ── AI types ──
@@ -119,6 +165,7 @@ export interface Objective {
   keyResults?: KeyResult[];
   parentObjective?: Objective;
   childObjectives?: Objective[];
+  reminderSettings?: ReminderSettings;
 }
 
 export interface KeyResult {
