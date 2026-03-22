@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   LogOut,
   Globe,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/lib/supabase-auth";
@@ -26,6 +27,7 @@ const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDas
   { href: "/alignment", labelKey: "nav.alignment", icon: GitBranch },
   { href: "/teams", labelKey: "nav.teams", icon: Users },
   { href: "/periods", labelKey: "nav.periods", icon: Calendar },
+  { href: "/reports", labelKey: "nav.reports", icon: FileText },
   { href: "/settings", labelKey: "nav.settings", icon: Settings },
 ];
 
