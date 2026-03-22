@@ -22,6 +22,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 
 /* ------------------------------------------------------------------ */
@@ -47,6 +48,14 @@ interface ObjectiveFormProps {
   onCancel: () => void;
   suggestedValues?: { title?: string; description?: string } | null;
   onFormChange?: (data: ObjectiveFormData) => void;
+  onFieldFocus?: (field: string, position?: number) => void;
+  showCollaborationIndicators?: boolean;
+  activeUsers?: Array<{
+    id: string;
+    fullName: string;
+    avatarUrl: string | null;
+    cursorPosition?: { field: string; position: number; selection?: { start: number; end: number } };
+  }>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -74,6 +83,9 @@ export default function ObjectiveForm({
   onCancel,
   suggestedValues,
   onFormChange,
+  onFieldFocus,
+  showCollaborationIndicators = false,
+  activeUsers = [],
 }: ObjectiveFormProps) {
   const { t } = useI18n();
   const isEdit = Boolean(objective);
@@ -89,6 +101,10 @@ export default function ObjectiveForm({
     status: objective?.status ?? "draft",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObjectiveFormData, string>>>({});
+  
+  // Refs pour les champs de saisie
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const descriptionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* ---- Apply suggested values ---- */
   useEffect(() => {
@@ -132,6 +148,12 @@ export default function ObjectiveForm({
     [],
   );
 
+  /* ---- Handle field focus for collaboration ---- */
+  const handleFieldFocus = useCallback((field: string, element: HTMLInputElement | HTMLTextAreaElement) => {
+    const position = element.selectionStart || 0;
+    onFieldFocus?.(field, position);
+  }, [onFieldFocus]);
+
   /* ---- Validation ---- */
   const validate = useCallback(
     (s: number): boolean => {
@@ -174,6 +196,12 @@ export default function ObjectiveForm({
     [parentObjectives, form.parentObjectiveId],
   );
 
+  /* ---- Get cursors for field ---- */
+  const getCursorsForField = useCallback((field: string) => {
+    if (!showCollaborationIndicators) return [];
+    return activeUsers.filter(u => u.cursorPosition?.field === field);
+  }, [showCollaborationIndicators, activeUsers]);
+
   /* ---- Level label helper ---- */
   const levelLabel = (value: ObjectiveLevel) => {
     const key = `level.${value}` as const;
@@ -193,6 +221,29 @@ export default function ObjectiveForm({
       {helpTexts[field]}
     </p>
   );
+
+  /* ---- Collaboration indicators ---- */
+  const CollaborationIndicators = ({ field }: { field: string }) => {
+    const cursors = getCursorsForField(field);
+    if (cursors.length === 0) return null;
+
+    return (
+      <div className="absolute -top-6 left-0 flex gap-1 z-10">
+        {cursors.map(user => (
+          <div key={user.id} className="flex items-center gap-1 rounded-full bg-primary-500 px-2 py-0.5 text-xs text-white">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.fullName} className="h-3 w-3 rounded-full" />
+            ) : (
+              <div className="h-3 w-3 rounded-full bg-white/30 flex items-center justify-center text-xs font-bold">
+                {user.fullName.charAt(0)}
+              </div>
+            )}
+            <span>{user.fullName.split(' ')[0]}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   /* ================================================================ */
   return (
@@ -230,35 +281,49 @@ export default function ObjectiveForm({
       {step === 1 && (
         <div className="space-y-4">
           {/* Title */}
-          <div>
+          <div className="relative">
             <label htmlFor="obj-title" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.titleLabel")} <span className="text-red-500">*</span>
             </label>
-            <input
-              id="obj-title"
-              type="text"
-              className={`input ${errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
-              placeholder={t("form.objective.titlePlaceholder")}
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-            />
+            <div className="relative">
+              <input
+                ref={titleInputRef}
+                id="obj-title"
+                type="text"
+                className={`input ${errors.title ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : ""}`}
+                placeholder={t("form.objective.titlePlaceholder")}
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                onFocus={(e) => handleFieldFocus("title", e.target)}
+                onKeyUp={(e) => handleFieldFocus("title", e.target)}
+                onClick={(e) => handleFieldFocus("title", e.target)}
+              />
+              {showCollaborationIndicators && <CollaborationIndicators field="title" />}
+            </div>
             {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
             <Hint field="title" />
           </div>
 
           {/* Description */}
-          <div>
+          <div className="relative">
             <label htmlFor="obj-desc" className="mb-1 block text-sm font-medium text-gray-700">
               {t("form.objective.descLabel")}
             </label>
-            <textarea
-              id="obj-desc"
-              className="input min-h-[100px] resize-y"
-              placeholder={t("form.objective.descPlaceholder")}
-              value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              rows={4}
-            />
+            <div className="relative">
+              <textarea
+                ref={descriptionTextareaRef}
+                id="obj-desc"
+                className="input min-h-[100px] resize-y"
+                placeholder={t("form.objective.descPlaceholder")}
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                onFocus={(e) => handleFieldFocus("description", e.target)}
+                onKeyUp={(e) => handleFieldFocus("description", e.target)}
+                onClick={(e) => handleFieldFocus("description", e.target)}
+                rows={4}
+              />
+              {showCollaborationIndicators && <CollaborationIndicators field="description" />}
+            </div>
             <Hint field="description" />
           </div>
 
@@ -382,78 +447,4 @@ export default function ObjectiveForm({
         </div>
       )}
 
-      {/* ── Step 3: Review ── */}
-      {step === 3 && (
-        <div className="space-y-3 rounded-xl bg-gray-50 p-4 text-sm">
-          <h4 className="font-semibold text-gray-900">{t("form.objective.step3Title")}</h4>
-          <dl className="space-y-2 text-gray-700">
-            <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">{t("form.objective.titleLabel")}</dt>
-              <dd className="text-right max-w-[60%]">{form.title}</dd>
-            </div>
-            {form.description && (
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">{t("form.objective.descLabel")}</dt>
-                <dd className="text-right max-w-[60%] line-clamp-2">{form.description}</dd>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">{t("form.objective.levelLabel")}</dt>
-              <dd>{levelLabel(form.level)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">{t("form.objective.periodLabel")}</dt>
-              <dd>{selectedPeriod?.label ?? "\u2014"}</dd>
-            </div>
-            {form.level !== "company" && (
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">{t("form.objective.teamLabel")}</dt>
-                <dd>{selectedTeam?.name ?? "\u2014"}</dd>
-              </div>
-            )}
-            {form.parentObjectiveId && (
-              <div className="flex justify-between">
-                <dt className="font-medium text-gray-500">{t("form.objective.alignedOn")}</dt>
-                <dd className="text-right max-w-[60%] line-clamp-1">
-                  {selectedParent?.title ?? "\u2014"}
-                </dd>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <dt className="font-medium text-gray-500">{t("form.objective.statusLabel")}</dt>
-              <dd>{statusLabel(form.status)}</dd>
-            </div>
-          </dl>
-        </div>
-      )}
-
-      {/* ── Actions ── */}
-      <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-        <div>
-          {step > 1 && (
-            <button type="button" onClick={prev} className="btn-ghost btn-md">
-              <ArrowLeft className="h-4 w-4" />
-              {t("form.objective.previous")}
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={onCancel} className="btn-secondary btn-md">
-            {t("common.cancel")}
-          </button>
-          {step < 3 ? (
-            <button type="button" onClick={next} className="btn-primary btn-md">
-              {t("form.objective.next")}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          ) : (
-            <button type="submit" className="btn-primary btn-md">
-              <Check className="h-4 w-4" />
-              {isEdit ? t("form.objective.updateObjective") : t("form.objective.createObjective")}
-            </button>
-          )}
-        </div>
-      </div>
-    </form>
-  );
-}
+      {/* ── Step 3
