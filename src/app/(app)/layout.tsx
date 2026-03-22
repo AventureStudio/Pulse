@@ -1,33 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
-  Target,
-  GitBranch,
-  Users,
-  Calendar,
-  Settings,
-  Activity,
   ChevronLeft,
   LogOut,
   Globe,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/lib/supabase-auth";
 import { useI18n } from "@/lib/i18n";
-import type { TranslationKey } from "@/lib/i18n";
-
-const navItems: { href: string; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
-  { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
-  { href: "/objectives", labelKey: "nav.objectives", icon: Target },
-  { href: "/alignment", labelKey: "nav.alignment", icon: GitBranch },
-  { href: "/teams", labelKey: "nav.teams", icon: Users },
-  { href: "/periods", labelKey: "nav.periods", icon: Calendar },
-  { href: "/settings", labelKey: "nav.settings", icon: Settings },
-];
+import Navigation from "@/components/ui/Navigation";
 
 export default function AppLayout({
   children,
@@ -95,34 +79,15 @@ export default function AppLayout({
             className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"
           >
             <ChevronLeft
-              className={`w-4 h-4 transition-transform ${!sidebarOpen ? "rotate-180" : ""}`}
+              className={`w-4 h-4 transition-transform ${
+                !sidebarOpen ? "rotate-180" : ""
+              }`}
             />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            const Icon = item.icon;
-            const label = t(item.labelKey);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-                title={!sidebarOpen ? label : undefined}
-              >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary-600" : ""}`} />
-                {sidebarOpen && <span>{label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
+        <Navigation sidebarOpen={sidebarOpen} variant="desktop" />
 
         {/* Language switcher */}
         <div className="border-t border-gray-100 px-3 py-2">
@@ -155,7 +120,9 @@ export default function AppLayout({
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{user.fullName}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user.fullName}
+                </p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>
             )}
@@ -173,27 +140,16 @@ export default function AppLayout({
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex lg:hidden z-50">
-        {navItems.slice(0, 5).map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs ${
-                isActive ? "text-primary-600" : "text-gray-500"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{t(item.labelKey)}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <Navigation sidebarOpen={false} variant="mobile" />
 
       {/* Main content */}
-      <main id="main-content" role="main" className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</main>
+      <main
+        id="main-content"
+        role="main"
+        className="flex-1 overflow-auto pb-20 lg:pb-0"
+      >
+        {children}
+      </main>
     </div>
   );
 }
