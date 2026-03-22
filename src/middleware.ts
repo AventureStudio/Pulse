@@ -4,6 +4,10 @@ import { createServerClient } from "@supabase/ssr";
 const AUTH_COOKIE_DOMAIN =
   process.env.NODE_ENV === "production" ? ".aventure-studio.com" : undefined;
 
+// Cache pour éviter les redirections multiples
+const redirectCache = new Map<string, { timestamp: number; result: string }>();
+const CACHE_TTL = 30000; // 30 secondes
+
 function applySecurityHeaders(response: NextResponse) {
   response.headers.set(
     "Strict-Transport-Security",
@@ -17,13 +21,58 @@ function applySecurityHeaders(response: NextResponse) {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+  // Optimisations de performance
+  response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
   return response;
 }
 
+// Fonction pour vérifier le cache de redirection
+function getCachedRedirect(key: string): string | null {
+  const cached = redirectCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.result;
+  }
+  redirectCache.delete(key);
+  return null;
+}
+
+// Fonction pour mettre en cache une redirection
+function setCachedRedirect(key: string, result: string) {
+  redirectCache.set(key, { timestamp: Date.now(), result });
+}
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Optimisation: skip middleware pour les ressources statiques
+  if (
+    pathname.startsWith('/_next/static') ||
+    pathname.startsWith('/_next/image') ||
+    pathname.includes('.') ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+
+  // Vérifier le cache de redirection pour éviter les appels multiples
+  const userId = request.cookies.get('sb-access-token')?.value;
+  const cacheKey = `${pathname}-${userId || 'anonymous'}`;
+  const cachedResult = getCachedRedirect(cacheKey);
+  
+  if (cachedResult) {
+    if (cachedResult === 'continue') {
+      return NextResponse.next();
+    } else {
+      const url = request.nextUrl.clone();
+      url.pathname = cachedResult;
+      return NextResponse.redirect(url);
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
-  // Use CENTRAL Supabase for auth validation
+  // Use CENTRAL Supabase for auth validation avec timeout
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -51,12 +100,30 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session — IMPORTANT: do not remove this call
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
+  // Refresh session avec timeout de 3 secondes
+  let user = null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const authPromise = supabase.auth.getUser();
+    const { data } = await Promise.race([
+      authPromise,
+      new Promise((_, reject) => {
+        controller.signal.addEventListener('abort', () => 
+          reject(new Error('Auth timeout'))
+        );
+      })
+    ]) as { data: { user: any } };
+    
+    clearTimeout(timeoutId);
+    user = data.user;
+  } catch (error) {
+    console.warn('Auth check timeout, allowing request to continue');
+    // En cas de timeout, on laisse passer pour éviter de bloquer
+    setCachedRedirect(cacheKey, 'continue');
+    return applySecurityHeaders(supabaseResponse);
+  }
 
   // Public routes that don't require auth
   const isPublicRoute =
@@ -79,6 +146,7 @@ export async function middleware(request: NextRequest) {
       );
     }
 
+    setCachedRedirect(cacheKey, '/login');
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -86,11 +154,13 @@ export async function middleware(request: NextRequest) {
 
   // If user is logged in and trying to access login page, redirect to dashboard
   if (user && (pathname === "/login" || pathname === "/")) {
+    setCachedRedirect(cacheKey, '/dashboard');
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
+  setCachedRedirect(cacheKey, 'continue');
   applySecurityHeaders(supabaseResponse);
   return supabaseResponse;
 }
