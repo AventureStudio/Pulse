@@ -4,6 +4,8 @@ export type ObjectiveStatus = "draft" | "active" | "completed" | "cancelled";
 export type Confidence = "on_track" | "at_risk" | "off_track";
 export type MetricType = "number" | "percentage" | "currency" | "boolean";
 export type UserRole = "admin" | "manager" | "member";
+export type AlertLevel = "info" | "warning" | "critical";
+export type ReportStatus = "generating" | "ready" | "failed" | "sent";
 
 // ── Core models ──
 export interface User {
@@ -152,6 +154,105 @@ export interface CheckIn {
   note: string;
   createdAt: string;
   author?: User;
+}
+
+// ── Report types ──
+export interface Report {
+  id: string;
+  periodId: string;
+  title: string;
+  status: ReportStatus;
+  data: ProgressMetrics;
+  alerts: ReportAlert[];
+  generatedAt: string;
+  sentAt?: string;
+  recipients: string[];
+}
+
+export interface ReportConfig {
+  id: string;
+  frequency: 'weekly' | 'biweekly' | 'monthly';
+  dayOfWeek: number;
+  enabled: boolean;
+  recipients: ReportRecipient[];
+  alertThresholds: AlertThresholds;
+  includeCharts: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportRecipient {
+  userId: string;
+  email: string;
+  role: UserRole;
+  teamId?: string;
+}
+
+export interface ProgressMetrics {
+  periodId: string;
+  totalObjectives: number;
+  completedObjectives: number;
+  avgProgress: number;
+  onTrackCount: number;
+  atRiskCount: number;
+  offTrackCount: number;
+  byLevel: LevelMetrics[];
+  byTeam: TeamMetrics[];
+  trending: TrendingData[];
+  weeklyProgress: WeeklyProgressPoint[];
+}
+
+export interface LevelMetrics {
+  level: ObjectiveLevel;
+  count: number;
+  avgProgress: number;
+  onTrack: number;
+  atRisk: number;
+  offTrack: number;
+}
+
+export interface TeamMetrics {
+  teamId: string;
+  teamName: string;
+  count: number;
+  avgProgress: number;
+  onTrack: number;
+  atRisk: number;
+  offTrack: number;
+}
+
+export interface TrendingData {
+  objectiveId: string;
+  title: string;
+  level: ObjectiveLevel;
+  previousProgress: number;
+  currentProgress: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface WeeklyProgressPoint {
+  week: string;
+  avgProgress: number;
+  onTrack: number;
+  atRisk: number;
+  offTrack: number;
+}
+
+export interface ReportAlert {
+  id: string;
+  level: AlertLevel;
+  type: 'behind_schedule' | 'no_progress' | 'declining_confidence' | 'overdue_checkin';
+  objectiveId: string;
+  objectiveTitle: string;
+  message: string;
+  actionRequired: boolean;
+}
+
+export interface AlertThresholds {
+  behindSchedule: number; // percentage below expected progress
+  noProgressDays: number; // days without check-ins
+  decliningConfidence: boolean; // alert on confidence drops
+  overdueCheckin: number; // days since last check-in
 }
 
 // ── UI types ──
