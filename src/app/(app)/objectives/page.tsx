@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Target, Plus, Search, Loader2 } from "lucide-react";
-import type { Objective, Period, ObjectiveLevel, ObjectiveStatus } from "@/types";
+import { Target, Plus, Search, Loader2, BookOpen } from "lucide-react";
+import type { Objective, Period, ObjectiveLevel, ObjectiveStatus, Template } from "@/types";
 import ObjectiveCard from "@/components/objectives/ObjectiveCard";
 import EmptyState from "@/components/ui/EmptyState";
+import Modal from "@/components/ui/Modal";
+import TemplateLibrary from "@/components/templates/TemplateLibrary";
 import { useI18n } from "@/lib/i18n";
 
 export default function ObjectivesPage() {
@@ -13,6 +15,7 @@ export default function ObjectivesPage() {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<ObjectiveLevel | "all">("all");
@@ -25,6 +28,13 @@ export default function ObjectivesPage() {
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+  }, []);
+
+  const handleTemplateSelect = useCallback((template: Template) => {
+    // Store selected template in sessionStorage and navigate to new objective page
+    sessionStorage.setItem('selectedTemplate', JSON.stringify(template));
+    setShowTemplates(false);
+    window.location.href = '/objectives/new';
   }, []);
 
   // Fetch periods on mount
@@ -86,9 +96,18 @@ export default function ObjectivesPage() {
             {t("objectives.subtitle")}
           </p>
         </div>
-        <Link href="/objectives/new" className="btn-primary btn-md">
-          <Plus className="w-4 h-4" /> {t("objectives.new")}
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowTemplates(true)}
+            className="btn-secondary btn-md"
+          >
+            <BookOpen className="w-4 h-4" />
+            Templates
+          </button>
+          <Link href="/objectives/new" className="btn-primary btn-md">
+            <Plus className="w-4 h-4" /> {t("objectives.new")}
+          </Link>
+        </div>
       </div>
 
       {/* Period selector */}
@@ -171,6 +190,19 @@ export default function ObjectivesPage() {
           ))}
         </div>
       )}
+
+      {/* Template Library Modal */}
+      <Modal
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        title="Bibliothèque de Templates"
+        size="lg"
+      >
+        <TemplateLibrary
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplates(false)}
+        />
+      </Modal>
     </div>
   );
 }

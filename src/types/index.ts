@@ -5,6 +5,42 @@ export type Confidence = "on_track" | "at_risk" | "off_track";
 export type MetricType = "number" | "percentage" | "currency" | "boolean";
 export type UserRole = "admin" | "manager" | "member";
 
+// ── Template types ──
+export type TemplateSector = "tech" | "marketing" | "sales" | "hr" | "finance" | "product" | "operations" | "general";
+export type TemplateTeamSize = "startup" | "small" | "medium" | "large";
+export type TemplateType = "predefined" | "custom";
+
+export interface TemplateMetric {
+  title: string;
+  metricType: MetricType;
+  startValue: number;
+  targetValue: number;
+  unit: string;
+  description?: string;
+}
+
+export interface TemplateObjective {
+  title: string;
+  description: string;
+  level: ObjectiveLevel;
+  suggestedMetrics: TemplateMetric[];
+  bestPractices: string[];
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  sector: TemplateSector;
+  teamSize: TemplateTeamSize[];
+  type: TemplateType;
+  objectives: TemplateObjective[];
+  tags: string[];
+  createdAt: string;
+  createdBy?: string;
+  isPublic: boolean;
+}
+
 // ── Core models ──
 export interface User {
   id: string;
@@ -161,6 +197,13 @@ export interface ObjectiveFilters {
   confidence: Confidence | "all";
   teamId: string | "all";
   periodId: string;
+  search: string;
+}
+
+export interface TemplateFilters {
+  sector: TemplateSector | "all";
+  teamSize: TemplateTeamSize | "all";
+  type: TemplateType | "all";
   search: string;
 }
 
