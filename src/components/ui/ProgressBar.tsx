@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 interface ProgressBarProps {
   progress: number;
@@ -33,19 +34,31 @@ export default function ProgressBar({
   className = "",
 }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, progress));
-  const color = getBarColor(clamped);
-  const height = getTrackHeight(size);
+  const color = useMemo(() => getBarColor(clamped), [clamped]);
+  const height = useMemo(() => getTrackHeight(size), [size]);
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <div
         className={`relative w-full overflow-hidden rounded-full bg-gray-100 ${height}`}
+        role="progressbar"
+        aria-valuenow={clamped}
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
         <motion.div
           className={`absolute inset-y-0 left-0 rounded-full ${color}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${clamped}%` }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          style={{
+            transform: `translateX(-${100 - clamped}%)`,
+            width: "100%",
+          }}
+          initial={{ transform: "translateX(-100%)" }}
+          animate={{ transform: `translateX(-${100 - clamped}%)` }}
+          transition={{ 
+            duration: 0.5, 
+            ease: "easeOut",
+            type: "tween"
+          }}
         />
       </div>
       {showLabel && (
