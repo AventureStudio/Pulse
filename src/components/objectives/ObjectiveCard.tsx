@@ -42,9 +42,9 @@ export default function ObjectiveCard({
 
   return (
     <div
-      className="card-interactive p-5"
+      className="card-interactive p-5 transition-all hover:shadow-md focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
       onClick={onClick}
-      role={onClick ? "button" : undefined}
+      role={onClick ? "button" : "article"}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={
         onClick
@@ -56,11 +56,14 @@ export default function ObjectiveCard({
             }
           : undefined
       }
+      data-testid={`objective-card-${objective.id}`}
+      aria-label={`Objectif: ${objective.title}`}
     >
       {/* Header: level badge + confidence */}
       <div className="flex items-center justify-between gap-2">
         <span
           className={`badge ${level.bg} ${level.text}`}
+          data-testid={`level-badge-${objective.level}`}
         >
           {t(level.labelKey)}
         </span>
@@ -68,25 +71,36 @@ export default function ObjectiveCard({
       </div>
 
       {/* Title */}
-      <h3 className="mt-3 text-sm font-semibold text-gray-900 line-clamp-2">
+      <h3 
+        className="mt-3 text-sm font-semibold text-gray-900 line-clamp-2"
+        data-testid="objective-title"
+      >
         {objective.title}
       </h3>
 
       {/* Progress */}
-      <div className="mt-3">
+      <div className="mt-3" data-testid="progress-section">
         <ProgressBar progress={objective.progress} size="sm" showLabel />
       </div>
 
       {/* Footer: meta */}
       <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
         {keyResultsCount > 0 && (
-          <span className="inline-flex items-center gap-1">
+          <span 
+            className="inline-flex items-center gap-1"
+            data-testid="key-results-count"
+            aria-label={`${keyResultsCount} résultats clés`}
+          >
             <KeyRound className="h-3.5 w-3.5" />
             {keyResultsCount} {t("kr.title")}{keyResultsCount > 1 ? "s" : ""}
           </span>
         )}
         {objective.owner && (
-          <span className="inline-flex items-center gap-1">
+          <span 
+            className="inline-flex items-center gap-1"
+            data-testid="objective-owner"
+            aria-label={`Responsable: ${objective.owner.fullName}`}
+          >
             <User className="h-3.5 w-3.5" />
             {objective.owner.fullName}
           </span>
